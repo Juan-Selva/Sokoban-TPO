@@ -1,0 +1,431 @@
+@startuml 04-diagrama-clases
+' ============================================================
+'  SOKOBAN — Diagrama de clases
+'  Basado en:
+'    01-modelo-dominio.md       (qué es cada cosa)
+'    02-patrones-gof.md         (10 patrones; Iterator descartado, Visitor pendiente de cátedra)
+'    03-relaciones-dependencias.md (relaciones, cardinalidades y paquetes)
+'
+'  Patrones aplicados: Builder, Factory Method, Decorator, Facade,
+'  Command, Memento, Observer, State, Template Method, Visitor(*)
+'  (*) Visitor pendiente de confirmación de la cátedra (ver 02 §23).
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor White
+  BorderColor #2C3E50
+  ArrowColor #2C3E50
+  FontSize 12
+}
+hide empty members
+
+' ============================================================
+'  PAQUETE: dominio
+' ============================================================
+package dominio {
+
+  ' ---- Value objects ----
+  class Posicion <<value object>> {
+    - fila : int
+    - columna : int
+    + sumar(d : Direccion) : Posicion
+    + equals(o : Object) : boolean
+  }
+
+  enum Direccion {
+    ARRIBA
+    ABAJO
+    IZQUIERDA
+    DERECHA
+    --
+    - dx : int
+    - dy : int
+  }
+
+  ' ---- Jerarquía de Celda ----
+  abstract class Celda {
+    # posicion : Posicion
+    + esTransitable() : boolean
+    + efectoEntrada(caja : Caja) : void
+    + cuentaParaVictoria() : boolean
+    + aceptar(v : CeldaVisitor) : void
+  }
+
+  class CeldaVacia
+  class Pared
+  class Destino
+  class TerrenoResbaladizo
+  class Cerrojo <<State context>> {
+    + estaActivo() : boolean
+    + permiteSalida(t : Tablero) : boolean
+    + alColocarLlave() : void
+    + alRetirarLlave() : void
+  }
+  class MuroAbiertoCerrado <<State context>> {
+    + abrir() : void
+    + cerrar() : void
+  }
+
+  Celda <|-- CeldaVacia
+  Celda <|-- Pared
+  Celda <|-- Destino
+  Celda <|-- TerrenoResbaladizo
+  Celda <|-- Cerrojo
+  Celda <|-- MuroAbiertoCerrado
+
+  ' ---- State del muro ----
+  interface EstadoMuro <<State>> {
+    + esTransitable() : boolean
+  }
+  class MuroAbierto
+  class MuroCerrado
+  EstadoMuro <|.. MuroAbierto
+  EstadoMuro <|.. MuroCerrado
+  MuroAbiertoCerrado *--> "1" EstadoMuro : estado actual\n(mutable)
+
+  ' ---- State del cerrojo (R11) ----
+  interface EstadoCerrojo <<State>> {
+    + permiteSalidaLlave(c : Cerrojo, t : Tablero) : boolean
+    + estaActivo() : boolean
+  }
+  class CerrojoSinLlave
+  class CerrojoConLlave
+  EstadoCerrojo <|.. CerrojoSinLlave
+  EstadoCerrojo <|.. CerrojoConLlave
+  Cerrojo *--> "1" EstadoCerrojo : estado actual\n(mutable)
+
+  ' ---- Jerarquía de Entidad ----
+  abstract class Entidad {
+    # posicion : Posicion
+    + getPosicion() : Posicion
+    + aceptar(v : EntidadVisitor) : void
+  }
+
+  class Jugador {
+    + intentarMover(d : Direccion) : boolean
+  }
+
+  abstract class Caja {
+    + intentarEmpujar(d : Direccion) : boolean
+  }
+
+  class CajaNormal
+  class CajaFragil {
+    - resistencia : int
+    + recibirEmpuje() : void
+    + estaRota() : boolean
+  }
+  class CajaLlave
+
+  Entidad <|-- Jugador
+  Entidad <|-- Caja
+  Caja <|-- CajaNormal
+  Caja <|-- CajaFragil
+  Caja <|-- CajaLlave
+
+  ' ---- Tablero ----
+  class Tablero {
+    - filas : int
+    - columnas : int
+    + dentroDeLimites(p : Posicion) : boolean
+    + celdaEn(p : Posicion) : Celda
+    + entidadEn(p : Posicion) : Entidad
+    + mover(e : Entidad, destino : Posicion) : void
+    + eliminar(c : Caja) : void
+    + hayVictoria() : boolean
+  }
+}
+
+' ---- Relaciones internas del dominio ----
+Celda *--> "1" Posicion
+Entidad *--> "1" Posicion : (mutable)
+Posicion ..> Direccion
+
+Tablero *--> "n·m" Celda
+Tablero *--> "1" Jugador
+Tablero *--> "0..*" Caja
+Jugador --> "1" Tablero
+Caja --> "1" Tablero
+
+Cerrojo --> "1" MuroAbiertoCerrado
+CajaLlave --> "1" Cerrojo : cerrojo asignado
+
+' ============================================================
+'  PAQUETE: visitor
+' ============================================================
+package visitor {
+  interface CeldaVisitor <<Visitor>> {
+    + visit(c : CeldaVacia) : void
+    + visit(c : Pared) : void
+    + visit(c : Destino) : void
+    + visit(c : TerrenoResbaladizo) : void
+    + visit(c : Cerrojo) : void
+    + visit(c : MuroAbiertoCerrado) : void
+  }
+  interface EntidadVisitor <<Visitor>> {
+    + visit(e : Jugador) : void
+    + visit(e : CajaNormal) : void
+    + visit(e : CajaFragil) : void
+    + visit(e : CajaLlave) : void
+  }
+}
+Celda ..> CeldaVisitor : aceptar
+Entidad ..> EntidadVisitor : aceptar
+
+' ============================================================
+'  PAQUETE: observer
+' ============================================================
+package observer {
+  interface Observable {
+    + agregarObservador(o : Observer) : void
+    + quitarObservador(o : Observer) : void
+    + notificar() : void
+  }
+  interface Observer {
+    + actualizar() : void
+  }
+}
+
+' ============================================================
+'  PAQUETE: partida
+' ============================================================
+package partida {
+
+  class Juego <<Facade>> {
+    + ejecutar(c : Command) : void
+    + getSnapshot() : Snapshot
+    + reiniciar() : void
+    + cargarSiguienteNivel() : void
+  }
+
+  class EstadoJuego {
+    - movimientos : int
+    - empujes : int
+    - undosConsecutivos : int
+    + registrarMovimiento(m : EstadoJuegoMemento) : void
+    + puedeUndo() : boolean
+    + getUndosDisponibles() : int
+    + ejecutarUndo() : void
+    + reiniciar() : void
+    + actualizar() : void
+  }
+
+  class Historial <<Caretaker>> {
+    + guardar(m : EstadoJuegoMemento) : void
+    + retroceder(n : int) : EstadoJuegoMemento
+    + descartar() : void
+  }
+
+  class EstadoJuegoMemento <<Memento>> {
+    - posiciones : Map
+    - resistencias : Map
+    - estadosMuros : Map
+    - contadores : Contadores
+  }
+
+  abstract class ResolutorMovimiento <<Template Method>> {
+    + resolver(d : Direccion) : void
+    # calcularDestino(d : Direccion) : Posicion
+    # resolverEmpuje(c : Caja, d : Direccion) : boolean
+    # resolverDeslizamiento(c : Caja, d : Direccion) : void
+    # verificarVictoria() : void
+  }
+
+  class Temporizador <<Observable>> {
+    - tiempoLimite : int
+    - tiempoRestante : int
+    + iniciar() : void
+    + tick() : void
+    + agregarObservador(o : Observer) : void
+  }
+}
+
+Juego *--> "1" Tablero
+Juego *--> "1" EstadoJuego
+Juego *--> "1" ResolutorMovimiento
+Juego --> "1" Nivel
+Juego ..|> Observable
+Juego --> "0..*" Observer
+
+EstadoJuego *--> "1" Historial
+EstadoJuego *--> "0..1" Temporizador
+EstadoJuego ..|> Observer
+Historial *--> "0..15" EstadoJuegoMemento
+
+ResolutorMovimiento ..> Tablero
+ResolutorMovimiento ..> EstadoJuego
+
+Temporizador ..|> Observable
+Temporizador --> "0..*" Observer
+
+' ============================================================
+'  PAQUETE: nivel
+' ============================================================
+package nivel {
+
+  interface Nivel {
+    + construirTablero() : Tablero
+    + tieneVisionLimitada() : boolean
+    + getRadioVision() : int
+    + tieneTiempoLimite() : boolean
+    + getSegundosLimite() : int
+  }
+
+  class NivelBase {
+    - layout : LayoutNivel
+  }
+
+  abstract class NivelDecorator <<Decorator>> {
+    # envuelto : Nivel
+  }
+
+  class VisionLimitadaDecorator {
+    - radio : int
+  }
+  class TiempoLimiteDecorator {
+    - segundos : int
+  }
+
+  Nivel <|.. NivelBase
+  Nivel <|.. NivelDecorator
+  NivelDecorator <|-- VisionLimitadaDecorator
+  NivelDecorator <|-- TiempoLimiteDecorator
+  NivelDecorator o--> "1" Nivel : envuelve
+
+  ' ---- Carga de niveles ----
+  class LectorTxt <<Director>> {
+    + leer(ruta : String) : Nivel
+  }
+
+  class NivelBuilder <<Builder>> {
+    + dimensiones(f : int, c : int) : void
+    + agregarCelda(ch : char, p : Posicion) : void
+    + agregarEntidad(ch : char, p : Posicion) : void
+    + conVisionLimitada(radio : int) : void
+    + conTiempoLimite(seg : int) : void
+    + build() : Nivel
+  }
+
+  class CeldaFactory <<Factory>> {
+    - creadores : Map<Character, Supplier<Celda>>
+    + crear(ch : char, p : Posicion) : Celda
+  }
+  class EntidadFactory <<Factory>> {
+    - creadores : Map<Character, Supplier<Entidad>>
+    + crear(ch : char, p : Posicion) : Entidad
+  }
+}
+
+Nivel ..> Tablero : construye
+LectorTxt ..> NivelBuilder
+NivelBuilder --> "1" CeldaFactory
+NivelBuilder --> "1" EntidadFactory
+NivelBuilder ..> Nivel : produce
+
+' ============================================================
+'  PAQUETE: comandos
+' ============================================================
+package comandos {
+  interface Command <<Command>> {
+    + ejecutar(j : Juego) : void
+  }
+  class MoverCommand {
+    - direccion : Direccion
+  }
+  class UndoCommand
+  class ReiniciarCommand
+
+  Command <|.. MoverCommand
+  Command <|.. UndoCommand
+  Command <|.. ReiniciarCommand
+}
+Command ..> Juego
+
+' ============================================================
+'  PAQUETE: view
+' ============================================================
+package view {
+  class Vista {
+    + repintar() : void
+    + actualizar() : void
+  }
+  class RendererVisitor {
+    - g : Graphics
+  }
+}
+
+Vista ..|> Observer
+Vista --> "1" Juego
+Vista *--> "1" RendererVisitor
+RendererVisitor ..|> CeldaVisitor
+RendererVisitor ..|> EntidadVisitor
+
+' ============================================================
+'  PAQUETE: controller
+' ============================================================
+package controller {
+  class Controlador {
+    + onTecla(d : Direccion) : void
+    + onUndo() : void
+    + onReiniciar() : void
+  }
+}
+Controlador --> "1" Juego
+Controlador ..> Command : crea
+
+' ============================================================
+'  NOTAS DE PATRONES
+' ============================================================
+note top of Juego
+  <b>FACADE</b>
+  Superficie estrecha del modelo
+  para Controller y View.
+end note
+
+note right of EstadoJuegoMemento
+  <b>MEMENTO</b>
+  Snapshot inmutable. Solo EstadoJuego
+  lo crea/consume; Historial solo guarda
+  (cola circular de 15 — R14).
+end note
+
+note bottom of NivelDecorator
+  <b>DECORATOR</b>
+  Visión limitada y tiempo límite son
+  ortogonales y componibles, sin
+  explosión de subclases.
+end note
+
+note bottom of EstadoMuro
+  <b>STATE</b>
+  El muro delega su comportamiento
+  (transitable o no) al estado actual.
+  Sin if(abierto).
+end note
+
+note bottom of EstadoCerrojo
+  <b>STATE</b>
+  El cerrojo delega en su estado si la
+  caja llave puede salir (R11): bloqueada
+  si el muro asociado esta ocupado.
+  Sin if(tieneLlave).
+end note
+
+note right of ResolutorMovimiento
+  <b>TEMPLATE METHOD</b>
+  Flujo fijo de un movimiento; los pasos
+  polimórficos (empuje, efecto de celda)
+  se delegan a los objetos del dominio.
+end note
+
+note bottom of CeldaVisitor
+  <b>VISITOR</b> (pendiente de cátedra)
+  Doble despacho para renderizar/operar
+  sobre celdas y entidades sin instanceof.
+  Plan B: Celda/Entidad.clavePresentacion().
+end note
+
+@enduml

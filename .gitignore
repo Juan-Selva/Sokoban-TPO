@@ -1,0 +1,61 @@
+# Compiled class files
+*.class
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Package files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Backups
+*.bak
+*.swp
+*~
+
+# Node (este proyecto es Java/Maven; el lockfile no aplica)
+package-lock.json
+node_modules/
+
+# Imagenes de referencia de patrones GoF (material de estudio, no entregable)
+/UML/
+
+# Consigna del trabajo (no es parte del entregable de codigo)
+PDS - TI - Prof Pepe.pdf
