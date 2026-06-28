@@ -86,9 +86,9 @@ Las dos funcionalidades adicionales requeridas se implementan con el patrón **D
 Documentación de modelo de dominio, patrones aplicados y justificación de diseño en `docs/`:
 
 - `docs/01-modelo-dominio.md`
-- `docs/02-patrones-gof.md`
-- `docs/03-relaciones-dependencias.md`
-- `docs/05-justificacion-diseno.md`
+- `docs/02-relaciones-dependencias.md`
+- `docs/03-justificacion-diseno.md`
+- `docs/04-patrones-GoF.md`
 
 Patrones GoF aplicados: Builder, Factory Method, Decorator, Facade, Command, Memento, Observer, State y Template Method. El renderizado sin `instanceof` se resuelve con una clave de presentación polimórfica (`clavePresentacion()`), no con Visitor.
 

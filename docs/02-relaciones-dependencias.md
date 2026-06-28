@@ -174,8 +174,8 @@ El Builder **produce un Nivel** terminado (potencialmente envuelto en Decorators
 
 ### 4.3 `CeldaFactory` y `EntidadFactory` (Factory)
 
-- `CeldaFactory ◆── Map<Character, Supplier<Celda>>` (composición — registro interno).
-- `EntidadFactory ◆── Map<Character, Supplier<Entidad>>`.
+- `CeldaFactory ◆── Map<Character, Function<Posicion, Celda>>` (composición — registro interno; `crear(char, Posicion)`).
+- `EntidadFactory ◆── Map<Character, Function<Posicion, Entidad>>`.
 - Sin dependencias hacia el resto del sistema: son factorías puras.
 
 ---
@@ -332,7 +332,7 @@ sokoban
 ├── nivel            ← Nivel, NivelBase, Decoradores, LectorTxt, NivelBuilder, Factories
 ├── comandos         ← Command y sus implementaciones
 ├── observer         ← Interfaces Observer/Observable
-├── view             ← Vista Swing (VentanaJuego, PanelTablero, PanelHud, PaletaPresentacion)
+├── view             ← Vista Swing (VentanaJuego, PanelTablero, PanelHud, PaletaPresentacion, ReproductorSonidos)
 └── controller       ← Controlador, mapeo input → Command
 ```
 

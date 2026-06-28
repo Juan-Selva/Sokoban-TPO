@@ -30,7 +30,7 @@ Todo despacho por tipo se resuelve con **polimorfismo**. Esto no es un detalle e
 - ¿Distintos tipos de celda reaccionan distinto al entrar una caja? → método polimórfico `efectoEntrada()` en cada subtipo.
 - ¿Distintos tipos de caja reaccionan distinto a un empuje? → `intentarEmpujar()` polimórfico.
 - ¿La vista tiene que dibujar cada tipo distinto sin preguntar "¿qué tipo sos?" → método polimórfico **`clavePresentacion()`** (token neutro que la vista mapea a imagen/color).
-- ¿Hay que crear la celda correcta según un carácter del `.txt`? → **Factory** (registro `Map<char, Supplier>`), no un `switch`.
+- ¿Hay que crear la celda correcta según un carácter del `.txt`? → **Factory** (registro `Map<Character, Function<Posicion, …>>`), no un `switch`.
 
 ### 1.4 Inmutabilidad donde aporta seguridad
 - **`Posicion` y `Direccion`** son *value objects* inmutables. `Posicion.sumar(Direccion)` devuelve una **nueva** posición. Esto evita aliasing y bugs de estado compartido.
@@ -65,7 +65,7 @@ Para cada patrón: **problema concreto → cómo lo resuelve → alternativa des
 
 #### Factory (Method) — mapear carácter → `Celda` / `Entidad`
 - **Problema:** el parser ve caracteres (`#`, `.`, `*`, `~`, …) y tiene que crear la instancia correcta. La solución intuitiva es un `switch (char)` — **prohibido** por la restricción del proyecto (1.3).
-- **Solución:** `CeldaFactory` y `EntidadFactory` mantienen un registro `Map<Character, Supplier<...>>`. Pedir `crear(ch)` devuelve la instancia sin ningún condicional por tipo.
+- **Solución:** `CeldaFactory` y `EntidadFactory` mantienen un registro `Map<Character, Function<Posicion, ...>>`. Pedir `crear(ch, posicion)` devuelve la instancia sin ningún condicional por tipo.
 - **Beneficio extra (Open/Closed):** agregar un tipo nuevo de celda = registrar una entrada más, sin tocar código existente.
 
 ### Estructurales
@@ -77,7 +77,7 @@ Para cada patrón: **problema concreto → cómo lo resuelve → alternativa des
 
 #### Facade — `Juego` como cara del modelo
 - **Problema:** la vista y el controlador no deberían conocer la maraña interna del modelo (Tablero, EstadoJuego, Historial, Resolutor, Temporizador).
-- **Solución:** `Juego` expone una API estrecha: `ejecutar(Command)`, `getSnapshot()`, `reiniciar()`, `cargarSiguienteNivel()`. Todo el acoplamiento exterior pasa por ahí.
+- **Solución:** `Juego` expone una API estrecha: `ejecutar(Command)`, `getTablero()` / `getEstadoJuego()`, `hayVictoria()`, `calcularResultado()`, `getUltimoEvento()` y el registro de observadores. Todo el acoplamiento exterior pasa por ahí (la carga del siguiente nivel la coordina el `Controlador`).
 - **Beneficio:** sostiene el MVC (1.6) y baja el acoplamiento (GRASP Low Coupling).
 
 ### De comportamiento

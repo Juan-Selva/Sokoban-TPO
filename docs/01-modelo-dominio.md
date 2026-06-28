@@ -24,7 +24,7 @@ La unidad más pequeña del tablero. Una celda ocupa exactamente una posición y
 - **Destino**: piso transitable que además marca un lugar donde una caja debe quedar para cumplir la condición de victoria.
 - **Terreno resbaladizo**: piso transitable, pero cuando una caja entra a él se desliza en la misma dirección hasta chocar contra un obstáculo o llegar a una celda no resbaladiza.
 - **Cerrojo**: piso transitable que se activa cuando una caja llave queda encima de él. Mientras esté activo, abre los muros abiertos/cerrados asociados.
-- **Muro abierto/cerrado**: celda que tiene dos estados. Cuando está **cerrado** se comporta como pared (bloquea); cuando está **abierto** se comporta como celda vacía. Cada muro está vinculado a uno o más cerrojos: si alguno de sus cerrojos está activado, el muro está abierto.
+- **Muro abierto/cerrado**: celda que tiene dos estados. Cuando está **cerrado** se comporta como pared (bloquea); cuando está **abierto** se comporta como celda vacía. Cada muro está vinculado a **un** cerrojo (correspondencia uno a uno, ver §5.2): cuando ese cerrojo está activado, el muro está abierto.
 
 > **Nota:** cada celda es de **un único tipo**. No existen combinaciones (no hay celdas destino-resbaladizas, ni cerrojo-destino, etc.).
 
@@ -178,7 +178,7 @@ Para cada entidad: **qué información maneja** y **qué decisiones toma**. Esto
 - Transitable. Conoce su muro vinculado. Su comportamiento "con/sin llave" se modela con el patrón State (no con un atributo consultado por condicionales): estando con llave, decide si permite que esa llave salga según si la celda del muro asociado está libre (R11).
 
 ### Muro abierto/cerrado
-- Sabe si está abierto o cerrado. Su estado depende del estado de sus cerrojos vinculados. Cuando está abierto se comporta como celda vacía; cuando está cerrado, como pared.
+- Sabe si está abierto o cerrado (a través de su `EstadoMuro`). Su estado lo cambia el cerrojo vinculado. Cuando está abierto se comporta como celda vacía; cuando está cerrado, como pared.
 
 ### Jugador
 - **Sabe**: su posición.
@@ -221,8 +221,8 @@ Para cada entidad: **qué información maneja** y **qué decisiones toma**. Esto
 - Una **celda** tiene una **posición** fija; una **entidad** tiene una **posición** que cambia con el tiempo.
 - El **jugador** es una **entidad**.
 - Una **caja** es una **entidad**. **Caja normal**, **caja frágil** y **caja llave** son tipos especializados de **caja**.
-- Una **celda cerrojo** está asociada a uno o más **muros abiertos/cerrados**. Un mismo **muro** puede depender de uno o más **cerrojos** (decisión: ver §5.2).
-- El **estado del juego** observa al **tablero** para detectar movimientos y registrarlos en el **historial**.
+- Una **celda cerrojo** está asociada a un **muro abierto/cerrado** (correspondencia uno a uno; ver §5.2).
+- El **estado del juego** registra cada movimiento del jugador en el **historial**: se lo notifica el resolutor de movimiento durante la resolución (no observa al tablero — ver §8 de `03`).
 - Un **nivel** es la "receta" para crear un **tablero** en su configuración inicial.
 - El **tablero** y el **estado del juego** son consultados por la **vista** para dibujar el HUD y el board.
 - El **tablero** y el **estado del juego** son modificados por el **controlador**, nunca directamente por la vista.

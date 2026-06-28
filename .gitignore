@@ -57,5 +57,8 @@ node_modules/
 # Imagenes de referencia de patrones GoF (material de estudio, no entregable)
 /UML/
 
+# Diagrama UML de trabajo (generado localmente)
+docs/UML/05-diagrama-completo-apaisado.dot
+
 # Consigna del trabajo (no es parte del entregable de codigo)
 PDS - TI - Prof Pepe.pdf
