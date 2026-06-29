@@ -19,10 +19,11 @@ class ControladorTest {
 
         assertEquals(1, controlador.getNumeroNivel());
 
-        // nivel1: @ $ . -> tres empujes a la derecha llevan la caja al destino.
-        controlador.mover(Direccion.DERECHA);
-        controlador.mover(Direccion.DERECHA);
-        controlador.mover(Direccion.DERECHA);
+        // nivel1: dos cajas sobre dos destinos.
+        controlador.mover(Direccion.ARRIBA);
+        controlador.mover(Direccion.ABAJO);
+        controlador.mover(Direccion.IZQUIERDA);
+        controlador.mover(Direccion.ARRIBA);
 
         assertEquals(2, controlador.getNumeroNivel());
         assertNotNull(controlador.getJuego().getTablero().getJugador());

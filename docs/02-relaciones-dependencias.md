@@ -38,20 +38,31 @@
 
 ```
 Entidad
-├── Jugador
-└── Caja (abstract)
+├── Jugador            (atributos: energia / energiaMaxima)
+└── Caja (abstract)    (compone una EstrategiaEmpuje → costo de energia)
     ├── CajaNormal
     ├── CajaFragil      (atributo: resistencia)
-    └── CajaLlave       (asociación: cerrojo asignado)
+    ├── CajaLlave       (asociación: cerrojo asignado)
+    └── CajaPesada      (usa EmpujePesado → costo 3)
 ```
 
 **Relaciones de la jerarquía:**
 
 - Cada `Entidad` **compone una** `Posicion` (1 a 1, mutable).
 - Cada `Entidad` expone `clavePresentacion()` (igual que `Celda`; la vista lo mapea a imagen/color, sin Visitor).
+- `Jugador` tiene **energía** (`energia`, `energiaMaxima`): la consumen las acciones y la reponen los ítems. Es parte del estado (entra al Memento).
+- `Caja ◆── EstrategiaEmpuje` (composición 1 a 1; `EmpujeNormal` costo 1 / `EmpujePesado` costo 3). Define el costo de energía de empujarla, sin condicionales por tipo (patrón Strategy).
 - `Jugador ─── Tablero` (asociación 1 a 1 — el jugador consulta al tablero para validar movimientos).
 - `Caja ─── Tablero` (asociación 1 a 1 — la caja consulta al tablero para validar empujes y deslizamientos).
 - `CajaLlave ─── Cerrojo` (asociación 1 a 1 — la caja llave conoce su cerrojo asignado; ver §5.2 del modelo de dominio).
+
+### 2.2.1 Ítems (`Item`)
+
+`Item` es una interfaz (no es `Entidad`: el ítem descansa sobre el piso y no se empuja).
+
+- `BotellaAgua` implementa `Item`; al recogerla repone energía (+12).
+- Cada `Item` expone `getPosicion()`, `clavePresentacion()` y `aplicar(Jugador)` (efecto polimórfico, sin preguntar el tipo).
+- `Tablero ◆── Item` (composición 1 a 0..* — el tablero contiene los ítems presentes; al recogerse se quitan).
 
 ### 2.3 `Tablero`
 
@@ -62,6 +73,7 @@ El Tablero es el **agregador del estado físico** del nivel en curso.
 | `Celda` | Composición | 1 a `n·m` | Grilla bidimensional; el Tablero es dueño |
 | `Jugador` | Composición | 1 a 1 | Exactamente un jugador por tablero |
 | `Caja` | Composición | 1 a 0..* | Cantidad variable (incluyendo cero si todas frágiles se rompieron) |
+| `Item` | Composición | 1 a 0..* | Ítems recogibles presentes (p. ej. botellas) |
 | `Nivel` | Asociación | * a 1 | Conoce de qué Nivel fue construido (para el reset) |
 
 **Lo que el Tablero NO conoce:** Vista, Controller, Comandos, Historial. Es puramente estado físico.
@@ -102,10 +114,7 @@ Ningún otro objeto del sistema "compone" `Direccion`; se pasa como parámetro.
 | Hacia | Tipo | Cardinalidad | Detalle |
 |-------|------|--------------|---------|
 | `Historial` | Composición | 1 a 1 | Buffer circular de hasta 15 Mementos |
-| `Temporizador` | Composición | 1 a 0..1 | Solo si el nivel lo tiene |
-| Contadores | Atributo | — | `movimientos`, `empujes`, `undosUsadosConsecutivos` |
-
-`EstadoJuego` **observa** al `Temporizador`: cuando el temporizador agota, dispara R23 (reinicio del nivel).
+| Contadores | Atributo | — | `movimientos`, `empujes`, `undosConsecutivos`, `undosTotales` |
 
 Expone además consultas que la vista usa como datos/predicados (sin lógica en la vista): `puedeUndo()` (habilita/deshabilita el botón Deshacer), `getUndosDisponibles()` (`MAX − undosConsecutivos`, R16/§5.3) y `calcularResultado()`, que arma un `ResultadoNivel` (contadores + puntaje + calificación) al ganar. Lleva además `undosTotales` (distinto de los consecutivos) para el puntaje.
 
@@ -118,7 +127,7 @@ Expone además consultas que la vista usa como datos/predicados (sin lógica en 
 ### 3.3 `Historial` y `Memento`
 
 - `Historial ◆── EstadoJuegoMemento` (composición 1 a 0..15).
-- `EstadoJuegoMemento` es **inmutable**: snapshot completo necesario para reconstruir el estado (posiciones del jugador y cajas, resistencias de frágiles, estado de muros, contadores).
+- `EstadoJuegoMemento` es **inmutable**: snapshot completo necesario para reconstruir el estado (posiciones del jugador y cajas, resistencias de frágiles, estados de muros y cerrojos, **energía del jugador**, **ítems presentes** y contadores). Cada celda/entidad guarda lo suyo de forma polimórfica (`capturarEstadoEn`/`restaurarEstadoDe`), sin `instanceof`.
 - Solo `EstadoJuego` crea y consume Mementos (encapsulación del patrón Memento — el Historial solo guarda).
 
 ### 3.4 `Nivel` y sus decoradores
@@ -129,25 +138,15 @@ Expone además consultas que la vista usa como datos/predicados (sin lógica en 
 Nivel (interface)
 ├── NivelBase                    ← implementación normal
 └── NivelDecorator (abstract)
-    ├── VisionLimitadaDecorator  ← agrega radio de visión
-    └── TiempoLimiteDecorator    ← agrega Temporizador
+    └── VisionLimitadaDecorator  ← agrega radio de visión
 ```
 
 **Relaciones:**
 
 - `NivelDecorator ◇── Nivel` (agregación 1 a 1 — envuelve a otro `Nivel`, que puede ser base u otro decorator).
-- Los decoradores se pueden **componer libremente** (`VisionLimitadaDecorator(TiempoLimiteDecorator(NivelBase))` o viceversa).
-- `Nivel` conoce su **layout inicial** (datos crudos: dimensiones, mapa de celdas, posiciones de entidades, asociaciones cerrojo–muro, estados iniciales de muros).
+- La estructura del Decorator queda lista para componer más modificadores ortogonales; hoy el único concreto es `VisionLimitadaDecorator` (el de tiempo límite se retiró junto con el temporizador).
+- `Nivel` conoce su **layout inicial** (datos crudos: dimensiones, mapa de celdas, posiciones de entidades e ítems, asociaciones cerrojo–muro).
 - `Nivel ╌╌▶ Tablero` (dependencia — al "iniciar" un nivel, produce un Tablero nuevo a partir de su layout).
-
-### 3.5 `Temporizador`
-
-| Hacia | Tipo | Cardinalidad | Detalle |
-|-------|------|--------------|---------|
-| `Observer` (EstadoJuego) | Asociación | 1 a 0..* | Notifica al expirar |
-| Atributos | — | — | `tiempoLimite`, `tiempoRestante` |
-
-El Temporizador no decide qué hacer al expirar: solo notifica. La decisión (reiniciar) la toma el `EstadoJuego`.
 
 ---
 
@@ -168,14 +167,16 @@ No conoce el dominio de juego directamente; solo el formato del archivo y el con
 |-------|------|--------------|---------|
 | `CeldaFactory` | Asociación | 1 a 1 | Para crear celdas a partir de chars |
 | `EntidadFactory` | Asociación | 1 a 1 | Para crear entidades a partir de chars |
+| `ItemFactory` | Asociación | 1 a 1 | Para crear ítems a partir de chars |
 | `Nivel` | Dependencia | 1 a 1 | Output del proceso de construcción |
 
-El Builder **produce un Nivel** terminado (potencialmente envuelto en Decorators si el `.txt` declara visión limitada o tiempo).
+El Builder **produce un Nivel** terminado (envuelto en el Decorator de visión si el `.txt` declara `VISION`).
 
-### 4.3 `CeldaFactory` y `EntidadFactory` (Factory)
+### 4.3 `CeldaFactory`, `EntidadFactory` e `ItemFactory` (Factory)
 
 - `CeldaFactory ◆── Map<Character, Function<Posicion, Celda>>` (composición — registro interno; `crear(char, Posicion)`).
-- `EntidadFactory ◆── Map<Character, Function<Posicion, Entidad>>`.
+- `EntidadFactory ◆── Map<Character, Function<Posicion, Entidad>>` (incluye `P` → `CajaPesada`).
+- `ItemFactory ◆── Map<Character, Function<Posicion, Item>>` (`B` → `BotellaAgua`).
 - Sin dependencias hacia el resto del sistema: son factorías puras.
 
 ---
@@ -202,18 +203,19 @@ Command (interface)
 
 Clase abstracta con un método plantilla `resolver(Direccion)` que orquesta el flujo:
 
-1. Calcular posición destino del jugador (`Posicion.sumar(Direccion)`).
-2. Consultar al Tablero qué celda y qué entidad hay en destino.
-3. Si hay caja: delegar al método polimórfico `intentarEmpujar()` de esa caja.
-4. Si la caja se mueve y aterriza en resbaladizo: disparar deslizamiento.
-5. Notificar al `EstadoJuego` el movimiento (para historial y contadores).
-6. Devolver el `EventoJuego` ocurrido (`MOVIMIENTO`, `EMPUJE` o `NADA`), que la vista usa para el sonido.
+1. Verificar la **energía** del jugador; si no alcanza ni para moverse (energía 0), devolver `SIN_ENERGIA`.
+2. Calcular posición destino del jugador (`Posicion.sumar(Direccion)`).
+3. Consultar al Tablero qué celda y qué entidad hay en destino.
+4. Si hay caja: si el jugador tiene energía para el **costo de empuje** de esa caja, delegar a `intentarEmpujar()`; si la caja se mueve y aterriza en resbaladizo, disparar deslizamiento; consumir el costo.
+5. Si no hay caja: mover al jugador (movimiento simple) y consumir 1 de energía.
+6. Recoger el **ítem** de la celda destino (si hay) y notificar al `EstadoJuego` el movimiento (historial y contadores).
+7. Devolver el `EventoJuego` ocurrido (`MOVIMIENTO`, `EMPUJE`, `SIN_ENERGIA` o `NADA`).
 
 **Relaciones:**
 
 - `ResolutorMovimiento ╌╌▶ Tablero`, `ResolutorMovimiento ╌╌▶ EstadoJuego` (dependencias usadas durante `resolver`).
-- `resolver(Direccion)` devuelve un `EventoJuego`: el resultado se fija en las ramas de empuje/movimiento que ya existen, sin agregar condicionales de estado.
-- Cada paso polimórfico (intentar empujar, efecto de entrada de la celda) se delega a los objetos del dominio: el Resolutor **no contiene lógica específica por tipo**.
+- `resolver(Direccion)` devuelve un `EventoJuego`; la **consecuencia** del evento (p. ej. `SIN_ENERGIA` reinicia el nivel) la dispara `Juego.mover` llamando a `EventoJuego.aplicarConsecuencia(Juego)`: la reacción se elige por polimorfismo del enum, no con un condicional.
+- Cada paso polimórfico (intentar empujar, costo de empuje, efecto de entrada de la celda, efecto del ítem) se delega a los objetos del dominio: el Resolutor **no contiene lógica específica por tipo**.
 
 ---
 
@@ -269,21 +271,22 @@ La Vista **no conoce subtipos concretos de `Celda` ni de `Entidad`**: a cada uno
 
 ### 7.3 Sonido (`EventoJuego`)
 
-- Cada acción del jugador produce un `EventoJuego` (`MOVIMIENTO`, `EMPUJE`, `UNDO`, `REINICIO`, `NADA`): token neutro que **conoce su propia clave de sonido**, exactamente la misma idea que `clavePresentacion()`.
-- `ResolutorMovimiento.resolver(...)` devuelve el evento (lo asigna en las ramas de empuje / movimiento que ya existen, sin condicionales nuevos); `Juego` lo guarda y lo expone con `getUltimoEvento()`.
-- El `Controlador` solo hace `getUltimoEvento().getClaveSonido()` y se lo pasa a la vista (`ReproductorSonidos`, capa view). **No** infiere el evento comparando contadores ni usa condicionales para elegir el efecto: la selección es polimórfica.
+- Cada acción del jugador produce un `EventoJuego` (`MOVIMIENTO`, `EMPUJE`, `UNDO`, `REINICIO`, `SIN_ENERGIA`, `NADA`): token neutro que **conoce su propia clave de sonido** (igual idea que `clavePresentacion()`) y **su propia consecuencia** (`aplicarConsecuencia(Juego)`).
+- `ResolutorMovimiento.resolver(...)` devuelve el evento; `Juego.mover` ejecuta su consecuencia (`SIN_ENERGIA` → reinicia el nivel) y lo guarda; lo expone con `getUltimoEvento()`.
+- El `Controlador` solo hace `getUltimoEvento().getClaveSonido()` y se lo pasa a la vista (`ReproductorSonidos`, capa view). **No** infiere el evento ni decide el destino del nivel con condicionales: tanto el sonido como la consecuencia se eligen por polimorfismo del enum.
 - El modelo no conoce el audio; solo dice "qué pasó". Si falta el `.wav` o no hay vista, no suena (best-effort). Simétrico con el renderizado por clave de presentación.
 
 ---
 
 ## 8. Observación de eventos
 
-**Dos** relaciones Observer (cerrado — ver decisión abajo):
+**Una** relación Observer:
 
 | Subject (Observable) | Observer | Evento |
 |----------------------|----------|--------|
 | `Juego` | `Vista` | Cambio en el estado del modelo → repintar |
-| `Temporizador` | `EstadoJuego` | Tiempo expirado → R23 |
+
+(El Observer `Temporizador → EstadoJuego` existió en el diseño previo y se retiró junto con el temporizador.)
 
 **Decisión (cierra el punto abierto previo):** ✅ se **descarta** el Observer `Tablero → EstadoJuego`. El `ResolutorMovimiento` (Template Method, §5.2) ya actualiza al `EstadoJuego` **directamente** en su paso 5 (registrar movimiento) y paso 6 (verificar victoria). Hacer que además el `EstadoJuego` observe al `Tablero` duplicaría esa responsabilidad y agregaría acoplamiento sin beneficio. Los eventos del dominio (caja sobre destino, caja rota, cerrojo activado) se resuelven dentro del flujo del Resolutor, no por observación.
 
@@ -298,6 +301,8 @@ Solo las relaciones más significativas (omitiendo Posicion/Direccion por ubicui
 | Tablero | ◆── | Celda | 1 a n·m |
 | Tablero | ◆── | Jugador | 1 a 1 |
 | Tablero | ◆── | Caja | 1 a 0..* |
+| Tablero | ◆── | Item | 1 a 0..* |
+| Caja | ◆── | EstrategiaEmpuje | 1 a 1 |
 | Cerrojo | ─── | MuroAbiertoCerrado | 1 a 1 |
 | Cerrojo | ◆── | EstadoCerrojo | 1 a 1 |
 | CajaLlave | ─── | Cerrojo | 1 a 1 |
@@ -307,11 +312,11 @@ Solo las relaciones más significativas (omitiendo Posicion/Direccion por ubicui
 | Juego | ◆── | ResolutorMovimiento | 1 a 1 |
 | Juego | ─── | Observer | 1 a 0..* |
 | EstadoJuego | ◆── | Historial | 1 a 1 |
-| EstadoJuego | ◆── | Temporizador | 1 a 0..1 |
 | Historial | ◆── | EstadoJuegoMemento | 1 a 0..15 |
 | NivelDecorator | ◇── | Nivel | 1 a 1 |
 | NivelBuilder | ─── | CeldaFactory | 1 a 1 |
 | NivelBuilder | ─── | EntidadFactory | 1 a 1 |
+| NivelBuilder | ─── | ItemFactory | 1 a 1 |
 | LectorTxt | ╌╌▶ | NivelBuilder | 1 a 1 |
 | Command | ╌╌▶ | Juego | * a 1 |
 | Controlador | ─── | Command | 1 a 1..* |
@@ -326,10 +331,11 @@ Si dividimos en paquetes/módulos lógicos:
 
 ```
 sokoban
-├── dominio          ← Celda, Entidad, Tablero, Posicion, Direccion, EstadoMuro, EstadoCerrojo
+├── dominio          ← Celda, Entidad, Tablero, Posicion, Direccion, EstadoMuro, EstadoCerrojo,
+│                       Item/BotellaAgua, EstrategiaEmpuje/EmpujeNormal/EmpujePesado
 ├── partida          ← Juego, EstadoJuego, Historial, Memento, ResolutorMovimiento,
-│                       Temporizador, ResultadoNivel, Calificacion (puntaje), EventoJuego
-├── nivel            ← Nivel, NivelBase, Decoradores, LectorTxt, NivelBuilder, Factories
+│                       ResultadoNivel, Calificacion (puntaje), EventoJuego
+├── nivel            ← Nivel, NivelBase, NivelDecorator, LectorTxt, NivelBuilder, Factories (Celda/Entidad/Item)
 ├── comandos         ← Command y sus implementaciones
 ├── observer         ← Interfaces Observer/Observable
 ├── view             ← Vista Swing (VentanaJuego, PanelTablero, PanelHud, PaletaPresentacion, ReproductorSonidos)
@@ -350,7 +356,7 @@ sokoban
 
 Antes de pasar al diagrama UML, confirmar:
 
-- [x] Toda regla R1–R24 tiene asignación clara a una o varias clases responsables.
+- [x] Toda regla R1–R25 tiene asignación clara a una o varias clases responsables (el tiempo límite fue retirado; energía/caja pesada/botella incorporadas).
 - [x] No hay ciclos de dependencias entre paquetes.
 - [x] Cada patrón GoF aprobado (§02) tiene clases concretas mapeadas acá.
 - [x] Las cardinalidades resisten una revisión cruzada: si `A ──── B` con `1 a *`, entonces `B ──── A` debe ser `* a 1`.

@@ -9,14 +9,14 @@ de su representación, permitiendo armarlo paso a paso. Suele acompañarse de un
 *Director* que conoce el orden de los pasos.
 
 **Cómo está implementado.** `NivelBuilder` arma un `Nivel` por etapas
-(`dimensiones()` → `agregarCelda()` / `agregarEntidad()` → `conVisionLimitada()` /
-`conTiempoLimite()` → `build()`). El *Director* es `LectorTxt`, que lee el archivo
+(`dimensiones()` → `agregarCelda()` / `agregarEntidad()` / `agregarItem()` →
+`conVisionLimitada()` → `build()`). El *Director* es `LectorTxt`, que lee el archivo
 `.txt` y le dicta los pasos al builder sin conocer el dominio.
 
 **Para qué se usa.** Para **cargar los niveles desde archivos de texto**:
-transforma la grilla de caracteres y las directivas de cabecera (`VISION`,
-`TIEMPO`) en un `Nivel` listo para jugar, manteniendo separados el formato del
-archivo y el armado del modelo.
+transforma la grilla de caracteres y la directiva de cabecera `VISION` en un
+`Nivel` listo para jugar, manteniendo separados el formato del archivo y el armado
+del modelo.
 
 ### 2. Factory Method
 
@@ -24,14 +24,15 @@ archivo y el armado del modelo.
 centralizado, de modo que el código cliente no use `new` de clases concretas ni
 condicionales por tipo.
 
-**Cómo está implementado.** `CeldaFactory` y `EntidadFactory` mapean cada carácter
-del `.txt` a la clase concreta mediante un registro `Map<Character, creador>`
-(sin `switch` ni `if-else` por tipo). Agregar un nuevo elemento es **registrar una
-entrada más** (principio Open/Closed).
+**Cómo está implementado.** `CeldaFactory`, `EntidadFactory` e `ItemFactory` mapean
+cada carácter del `.txt` a la clase concreta mediante un registro
+`Map<Character, creador>` (sin `switch` ni `if-else` por tipo). Agregar un nuevo
+elemento es **registrar una entrada más** (principio Open/Closed).
 
 **Para qué se usa.** Para **traducir los caracteres del nivel** a celdas
-(`#` → `Pared`, `.` → `Destino`, etc.) y entidades (`@` → `Jugador`, `$` →
-`CajaNormal`, etc.) durante la carga, sin acoplar el lector a los tipos concretos.
+(`#` → `Pared`, `.` → `Destino`, etc.), entidades (`@` → `Jugador`, `$` →
+`CajaNormal`, `P` → `CajaPesada`, etc.) e ítems (`B` → `BotellaAgua`) durante la
+carga, sin acoplar el lector a los tipos concretos.
 
 ---
 
@@ -44,13 +45,14 @@ forma dinámica, envolviéndolo en otro objeto con la misma interfaz, como
 alternativa flexible a la herencia.
 
 **Cómo está implementado.** `NivelDecorator` (abstracto) implementa `Nivel` y
-envuelve otro `Nivel`. Sus concretos `VisionLimitadaDecorator` y
-`TiempoLimiteDecorator` agregan una capacidad cada uno. El `NivelBuilder` envuelve
-el `NivelBase` con los decoradores que correspondan.
+envuelve otro `Nivel`. Su concreto `VisionLimitadaDecorator` agrega la capacidad de
+visión limitada. El `NivelBuilder` envuelve el `NivelBase` con el decorador si el
+nivel lo declara (directiva `VISION`).
 
-**Para qué se usa.** Para las **dos funcionalidades adicionales**: visión limitada
-(radio N) y tiempo límite (segundos), que se pueden combinar sobre cualquier nivel
-sin modificar el `NivelBase`.
+**Para qué se usa.** Para la funcionalidad adicional de **visión limitada** (radio
+N), que se aplica sobre cualquier nivel sin modificar el `NivelBase`. La estructura
+queda lista para sumar más decoradores ortogonales en el futuro. (El decorador de
+tiempo límite existió en el diseño previo y se retiró junto con el temporizador.)
 
 ### 4. Facade
 
@@ -93,9 +95,12 @@ interno** de un objeto sin violar su encapsulamiento, para poder restaurarlo
 después. Participan *Originator*, *Memento* y *Caretaker*.
 
 **Cómo está implementado.** El *Originator* es `EstadoJuego`, que crea
-`EstadoJuegoMemento` (y `MementoTablero` con posiciones, resistencias y estados de
-muros/cerrojos). El *Caretaker* es `Historial`, una cola acotada a los últimos 15
-estados que solo guarda/entrega mementos sin conocer su contenido.
+`EstadoJuegoMemento` (y `MementoTablero` con posiciones, resistencias, estados de
+muros/cerrojos, **energía del jugador** e **ítems presentes**). Cada celda/entidad
+guarda y restaura **su** estado de forma polimórfica (`capturarEstadoEn` /
+`restaurarEstadoDe`), por lo que el snapshot no usa `instanceof`. El *Caretaker* es
+`Historial`, una cola acotada a los últimos 15 estados que solo guarda/entrega
+mementos sin conocer su contenido.
 
 **Para qué se usa.** Para el **deshacer (undo)**: restaurar el nivel hasta 5
 movimientos hacia atrás (hasta 3 usos consecutivos) y para el **reinicio** del
@@ -107,14 +112,12 @@ nivel, sin exponer la representación interna del estado.
 cuando un sujeto (*Observable*) cambia de estado, notifica automáticamente a sus
 observadores.
 
-**Cómo está implementado.** Interfaces `Observable` / `Observer`. Hay **dos
-relaciones**: (1) `Juego` (sujeto) → `Vista` (observador), que repinta al cambiar
-el modelo; (2) `Temporizador` (sujeto) → `EstadoJuego` (observador), que dispara
-el reinicio cuando el tiempo se agota.
+**Cómo está implementado.** Interfaces `Observable` / `Observer`. `Juego` (sujeto)
+notifica a la `Vista` (observador), que repinta cuando cambia el modelo, sin que el
+modelo conozca Swing.
 
-**Para qué se usa.** Para **mantener la vista sincronizada** con el modelo sin que
-el modelo conozca Swing (MVC), y para **reaccionar al fin del tiempo** en los
-niveles con límite.
+**Para qué se usa.** Para **mantener la vista sincronizada** con el modelo
+respetando MVC (el modelo no depende de la vista).
 
 ### 8. State
 
@@ -151,6 +154,31 @@ provoca deslizamiento): el resolutor **no contiene lógica específica por tipo*
 algoritmo estable, mientras cada tipo de caja y de celda aporta su comportamiento
 particular sin romper la secuencia.
 
+### 10. Strategy
+
+**Qué es.** Patrón de comportamiento que encapsula una familia de algoritmos
+intercambiables detrás de una interfaz, eligiendo el comportamiento por
+composición en vez de por condicionales.
+
+**Cómo está implementado.** `EstrategiaEmpuje` con `EmpujeNormal` (costo 1) y
+`EmpujePesado` (costo 3). Cada `Caja` compone su estrategia y expone
+`getCostoEmpuje()`; la `CajaPesada` usa `EmpujePesado` y el resto, `EmpujeNormal`.
+
+**Para qué se usa.** Para el **costo de energía de empujar** cada tipo de caja
+(funcionalidad de energía + caja pesada), sin que nadie pregunte el tipo de caja
+con un condicional.
+
+---
+
+## Nota: consecuencia de un evento por polimorfismo (sin condicionales)
+
+El resolutor devuelve un `EventoJuego` (enum) y **cada valor conoce su
+consecuencia** mediante `aplicarConsecuencia(Juego)`: por ejemplo `SIN_ENERGIA`
+reinicia el nivel. Así, la reacción a quedarse sin energía se elige por
+polimorfismo del propio enum y el controlador **no** decide el destino del nivel
+con un `if`. Cada valor del enum también conoce su `claveSonido` (la vista la usa
+para reproducir el efecto), con la misma idea de "el objeto sabe lo suyo".
+
 ---
 
 ## Tabla resumen
@@ -158,11 +186,12 @@ particular sin romper la secuencia.
 | Categoría | Patrón | Clases principales | Para qué se usa |
 |---|---|---|---|
 | Creacional | Builder | `NivelBuilder`, `LectorTxt` | Cargar niveles desde `.txt` |
-| Creacional | Factory Method | `CeldaFactory`, `EntidadFactory` | Caracter → Celda / Entidad |
-| Estructural | Decorator | `NivelDecorator`, `VisionLimitadaDecorator`, `TiempoLimiteDecorator` | Funcionalidades extra (visión, tiempo) |
+| Creacional | Factory Method | `CeldaFactory`, `EntidadFactory`, `ItemFactory` | Caracter → Celda / Entidad / Ítem |
+| Estructural | Decorator | `NivelDecorator`, `VisionLimitadaDecorator` | Funcionalidad extra (visión limitada) |
 | Estructural | Facade | `Juego` | Fachada del modelo para Controller/View |
 | Comportamiento | Command | `Command`, `MoverCommand`, `UndoCommand`, `ReiniciarCommand` | Acciones del jugador |
-| Comportamiento | Memento | `EstadoJuegoMemento`, `MementoTablero`, `Historial` | Undo y reinicio |
-| Comportamiento | Observer | `Observable`, `Observer` | Sincronizar vista y reaccionar al temporizador |
+| Comportamiento | Memento | `EstadoJuegoMemento`, `MementoTablero`, `Historial` | Undo y reinicio (incluye energía e ítems) |
+| Comportamiento | Observer | `Observable`, `Observer` | Sincronizar la vista con el modelo |
 | Comportamiento | State | `EstadoMuro`, `EstadoCerrojo` (+ concretos) | Muro abierto/cerrado y cerrojo con/sin llave |
+| Comportamiento | Strategy | `EstrategiaEmpuje`, `EmpujeNormal`, `EmpujePesado` | Costo de empuje por tipo de caja (energía) |
 | Comportamiento | Template Method | `ResolutorMovimiento` | Resolver cada movimiento |

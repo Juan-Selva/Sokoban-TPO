@@ -14,7 +14,14 @@ public enum EventoJuego {
     MOVIMIENTO("movimiento"),
     EMPUJE("empuje"),
     UNDO("undo"),
-    REINICIO("reinicio");
+    REINICIO("reinicio"),
+    SIN_ENERGIA("sin_energia") {
+        @Override
+        public void aplicarConsecuencia(Juego juego) {
+            // Sin energia para seguir: el nivel se reinicia.
+            juego.reiniciar();
+        }
+    };
 
     private final String claveSonido;
 
@@ -25,5 +32,15 @@ public enum EventoJuego {
     /** Clave del efecto a reproducir; vacia cuando el evento no suena. */
     public String getClaveSonido() {
         return claveSonido;
+    }
+
+    /**
+     * Consecuencia de este evento sobre la partida. Por defecto no hace nada;
+     * cada valor que deba alterar el nivel la redefine. Asi la reaccion se elige
+     * por polimorfismo (cada evento sabe que hacer), sin condicionales en quien
+     * lo recibe.
+     */
+    public void aplicarConsecuencia(Juego juego) {
+        // Sin consecuencia por defecto.
     }
 }

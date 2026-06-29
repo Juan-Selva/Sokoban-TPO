@@ -10,37 +10,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Director del Builder: lee un .txt del classpath, separa las directivas de
- * cabecera (VISION n / TIEMPO n) de la grilla y le dicta los pasos al
- * NivelBuilder. No conoce el dominio: solo el formato del archivo y el contrato
- * del builder.
+ * Director del Builder: lee un .txt del classpath, separa la directiva de
+ * cabecera (VISION n) de la grilla y le dicta los pasos al NivelBuilder. No
+ * conoce el dominio: solo el formato del archivo y el contrato del builder.
  */
 public class LectorTxt {
 
     private static final String DIRECTIVA_VISION = "VISION ";
-    private static final String DIRECTIVA_TIEMPO = "TIEMPO ";
 
     private final CeldaFactory celdaFactory;
     private final EntidadFactory entidadFactory;
+    private final ItemFactory itemFactory;
 
-    public LectorTxt(CeldaFactory celdaFactory, EntidadFactory entidadFactory) {
+    public LectorTxt(CeldaFactory celdaFactory, EntidadFactory entidadFactory, ItemFactory itemFactory) {
         this.celdaFactory = celdaFactory;
         this.entidadFactory = entidadFactory;
+        this.itemFactory = itemFactory;
     }
 
     public Nivel leer(String rutaRecurso) throws IOException {
         List<String> lineas = leerLineas(rutaRecurso);
 
-        NivelBuilder builder = new NivelBuilder(celdaFactory, entidadFactory);
+        NivelBuilder builder = new NivelBuilder(celdaFactory, entidadFactory, itemFactory);
         List<String> grilla = new ArrayList<>();
         Integer vision = null;
-        Integer tiempo = null;
 
         for (String linea : lineas) {
             if (linea.startsWith(DIRECTIVA_VISION)) {
                 vision = Integer.parseInt(linea.substring(DIRECTIVA_VISION.length()).trim());
-            } else if (linea.startsWith(DIRECTIVA_TIEMPO)) {
-                tiempo = Integer.parseInt(linea.substring(DIRECTIVA_TIEMPO.length()).trim());
             } else {
                 grilla.add(linea);
             }
@@ -55,22 +52,25 @@ public class LectorTxt {
             for (int columna = 0; columna < columnas; columna++) {
                 char caracter = columna < linea.length() ? linea.charAt(columna) : ' ';
                 Posicion posicion = new Posicion(fila, columna);
-                if (entidadFactory.conoce(caracter)) {
-                    builder.agregarEntidad(caracter, posicion);
-                } else {
-                    builder.agregarCelda(caracter, posicion);
-                }
+                enrutar(builder, caracter, posicion);
             }
         }
 
         if (vision != null) {
             builder.conVisionLimitada(vision);
         }
-        if (tiempo != null) {
-            builder.conTiempoLimite(tiempo);
-        }
 
         return builder.build();
+    }
+
+    private void enrutar(NivelBuilder builder, char caracter, Posicion posicion) {
+        if (entidadFactory.conoce(caracter)) {
+            builder.agregarEntidad(caracter, posicion);
+        } else if (itemFactory.conoce(caracter)) {
+            builder.agregarItem(caracter, posicion);
+        } else {
+            builder.agregarCelda(caracter, posicion);
+        }
     }
 
     private List<String> leerLineas(String rutaRecurso) throws IOException {

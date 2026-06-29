@@ -38,7 +38,9 @@ public class Juego implements Observable {
     }
 
     public void mover(Direccion direccion) {
-        this.ultimoEvento = resolutor.resolver(direccion);
+        EventoJuego evento = resolutor.resolver(direccion);
+        evento.aplicarConsecuencia(this); // p. ej. SIN_ENERGIA reinicia el nivel
+        this.ultimoEvento = evento;
     }
 
     public void deshacer() {

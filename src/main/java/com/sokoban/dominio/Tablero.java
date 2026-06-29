@@ -15,6 +15,7 @@ public class Tablero {
     private final Celda[][] celdas;
     private Jugador jugador;
     private final List<Caja> cajas = new ArrayList<>();
+    private final List<Item> items = new ArrayList<>();
 
     public Tablero(int filas, int columnas) {
         this.filas = filas;
@@ -59,6 +60,27 @@ public class Tablero {
 
     public List<Caja> getCajas() {
         return cajas;
+    }
+
+    public void agregarItem(Item item) {
+        items.add(item);
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public Item itemEn(Posicion posicion) {
+        for (Item item : items) {
+            if (item.getPosicion().equals(posicion)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    public void quitarItem(Item item) {
+        items.remove(item);
     }
 
     public Caja cajaEn(Posicion posicion) {
@@ -117,7 +139,7 @@ public class Tablero {
      * Cada celda/entidad guarda lo suyo de forma polimorfica (sin instanceof).
      */
     public MementoTablero capturarEstado() {
-        MementoTablero memento = new MementoTablero(cajas);
+        MementoTablero memento = new MementoTablero(cajas, items);
         jugador.capturarEstadoEn(memento);
         for (Caja caja : cajas) {
             caja.capturarEstadoEn(memento);
@@ -135,6 +157,8 @@ public class Tablero {
     public void restaurarEstado(MementoTablero memento) {
         cajas.clear();
         cajas.addAll(memento.getCajasPresentes());
+        items.clear();
+        items.addAll(memento.getItemsPresentes());
         jugador.restaurarEstadoDe(memento);
         for (Caja caja : memento.getCajasPresentes()) {
             caja.restaurarEstadoDe(memento);

@@ -17,17 +17,24 @@ import java.util.Map;
 public class MementoTablero {
 
     private final List<Caja> cajasPresentes;
+    private final List<Item> itemsPresentes;
     private final Map<Entidad, Posicion> posiciones = new HashMap<>();
     private final Map<CajaFragil, Integer> resistencias = new HashMap<>();
     private final Map<MuroAbiertoCerrado, EstadoMuro> murosEstado = new HashMap<>();
     private final Map<Cerrojo, EstadoCerrojo> cerrojosEstado = new HashMap<>();
+    private int energiaJugador;
 
-    public MementoTablero(List<Caja> cajasPresentes) {
+    public MementoTablero(List<Caja> cajasPresentes, List<Item> itemsPresentes) {
         this.cajasPresentes = new ArrayList<>(cajasPresentes);
+        this.itemsPresentes = new ArrayList<>(itemsPresentes);
     }
 
     public List<Caja> getCajasPresentes() {
         return cajasPresentes;
+    }
+
+    public List<Item> getItemsPresentes() {
+        return itemsPresentes;
     }
 
     public void guardarPosicion(Entidad entidad, Posicion posicion) {
@@ -60,5 +67,13 @@ public class MementoTablero {
 
     public EstadoCerrojo estadoCerrojoDe(Cerrojo cerrojo) {
         return cerrojosEstado.get(cerrojo);
+    }
+
+    public void guardarEnergiaJugador(int energia) {
+        this.energiaJugador = energia;
+    }
+
+    public int getEnergiaJugador() {
+        return energiaJugador;
     }
 }

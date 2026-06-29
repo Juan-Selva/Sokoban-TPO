@@ -13,17 +13,18 @@ public class NivelBuilder {
 
     private final CeldaFactory celdaFactory;
     private final EntidadFactory entidadFactory;
+    private final ItemFactory itemFactory;
 
     private int filas;
     private int columnas;
     private char[][] grilla;
 
     private Integer radioVision;
-    private Integer segundosLimite;
 
-    public NivelBuilder(CeldaFactory celdaFactory, EntidadFactory entidadFactory) {
+    public NivelBuilder(CeldaFactory celdaFactory, EntidadFactory entidadFactory, ItemFactory itemFactory) {
         this.celdaFactory = celdaFactory;
         this.entidadFactory = entidadFactory;
+        this.itemFactory = itemFactory;
     }
 
     public void dimensiones(int filas, int columnas) {
@@ -45,21 +46,19 @@ public class NivelBuilder {
         grilla[posicion.getFila()][posicion.getColumna()] = caracter;
     }
 
+    /** Registra un caracter de item en la grilla (se resuelve al construir). */
+    public void agregarItem(char caracter, Posicion posicion) {
+        grilla[posicion.getFila()][posicion.getColumna()] = caracter;
+    }
+
     public void conVisionLimitada(int radio) {
         this.radioVision = radio;
     }
 
-    public void conTiempoLimite(int segundos) {
-        this.segundosLimite = segundos;
-    }
-
     public Nivel build() {
-        Nivel nivel = new NivelBase(filas, columnas, grilla, celdaFactory, entidadFactory);
+        Nivel nivel = new NivelBase(filas, columnas, grilla, celdaFactory, entidadFactory, itemFactory);
         if (radioVision != null) {
             nivel = new VisionLimitadaDecorator(nivel, radioVision);
-        }
-        if (segundosLimite != null) {
-            nivel = new TiempoLimiteDecorator(nivel, segundosLimite);
         }
         return nivel;
     }

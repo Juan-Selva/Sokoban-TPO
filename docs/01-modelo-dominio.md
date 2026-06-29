@@ -35,11 +35,12 @@ Cualquier objeto que ocupa una posición del tablero pero **puede moverse** o **
 La entidad controlada por la persona que juega. Hay exactamente un jugador por nivel. Ocupa una sola celda. Puede moverse en cualquiera de las cuatro direcciones, una celda por vez, según las reglas del juego.
 
 ### 1.7 Caja
-Entidad que el jugador empuja para llevarla hasta un destino. Tres variantes:
+Entidad que el jugador empuja para llevarla hasta un destino. Variantes:
 
-- **Caja normal**: sin características especiales. Se empuja, se desliza si está sobre terreno resbaladizo.
+- **Caja normal**: sin características especiales. Se empuja, se desliza si está sobre terreno resbaladizo. Su empuje cuesta 1 de energía.
 - **Caja frágil**: se comporta como una caja normal, pero tiene una **resistencia** finita. Cada empuje le resta un punto de resistencia. Cuando llega a cero, la caja **se rompe** y desaparece del tablero.
 - **Caja llave**: se comporta como una caja normal, pero al quedar sobre su celda cerrojo asignada abre los muros vinculados a ese cerrojo. Puede ser empujada fuera del cerrojo **solo si ninguna celda del muro asociado tiene una entidad encima**; si está ocupado, el empuje no se realiza. Una caja llave **nunca puede ser frágil**.
+- **Caja pesada**: se comporta como una caja normal en cuanto a colisiones, deslizamiento y victoria, pero **empujarla cuesta más energía** (3 en vez de 1). No se rompe. (Funcionalidad adicional — ver §1.20.)
 
 ### 1.8 Empuje
 Acción que ocurre cuando el jugador intenta moverse hacia una celda ocupada por una caja. Si la caja puede moverse a su próxima celda en la misma dirección, ambos se mueven (jugador y caja); si no puede, ninguno se mueve. **Empujar es distinto de moverse**: el contador de empujes solo incrementa cuando hay empuje efectivo.
@@ -59,7 +60,7 @@ Durante un deslizamiento, una caja frágil **no pierde resistencia adicional**: 
 Configuración inicial completa de un tablero: dimensiones, ubicación de cada tipo de celda, posición inicial del jugador y de cada caja, asociación entre cerrojos y muros, y **estado inicial de cada muro abierto/cerrado** (por defecto cerrado, pero el archivo puede especificarlo). Cada nivel se carga desde un archivo de texto.
 
 ### 1.12 Estado del juego
-Conjunto de información que describe la situación actual de una partida en un instante dado: qué nivel se está jugando, posiciones actuales de todas las entidades, estado de los muros (abiertos/cerrados), resistencia restante de cada caja frágil, contadores (movimientos, empujes, undos usados), e historial reciente para soportar undo.
+Conjunto de información que describe la situación actual de una partida en un instante dado: qué nivel se está jugando, posiciones actuales de todas las entidades, estado de los muros (abiertos/cerrados), resistencia restante de cada caja frágil, **energía actual del jugador**, **ítems presentes** en el tablero, contadores (movimientos, empujes, undos usados), e historial reciente para soportar undo. Todo esto (incluida la energía y los ítems) entra en el snapshot del Memento, de modo que el undo y el reinicio lo restauran.
 
 ### 1.13 Historial
 Registro de los últimos N estados del juego (N = 15 según el enunciado). Permite reconstruir la situación tal como estaba varios movimientos atrás. Es la base de la funcionalidad undo.
@@ -85,8 +86,13 @@ Operación que restaura el nivel actual a su configuración inicial: todas las e
 ### 1.18 Visión limitada
 Modalidad opcional de un nivel en la que el jugador solo puede ver las celdas dentro de un radio N alrededor de su posición actual. Las celdas fuera del radio se muestran ocultas. La lógica del juego no cambia; solo cambia lo que se renderiza. El radio es un parámetro del nivel.
 
-### 1.19 Tiempo límite
-Modalidad opcional de un nivel en la que existe un contador regresivo. Si el contador llega a cero antes de que el jugador gane el nivel, el nivel se reinicia automáticamente (equivalente a R19). El tiempo límite es un parámetro del nivel expresado en segundos.
+### 1.19 Energía (funcionalidad adicional)
+Reserva de "stamina" del jugador. Arranca llena (máximo 20 por defecto). Cada acción la consume: **moverse cuesta 1** y **empujar cuesta lo que defina la caja** (normal 1, pesada 3). Si no hay energía suficiente para una acción, esa acción no se realiza. Si el jugador se queda **sin energía para moverse**, el nivel se reinicia automáticamente (ver R24). La energía es parte del estado (entra al Memento).
+
+### 1.20 Ítem (funcionalidad adicional)
+Objeto recogible que descansa sobre el piso y **no se empuja**. Cuando el jugador entra a su celda, aplica su efecto y desaparece del tablero. La única variante actual es la **botella de agua**, que repone energía (+12, sin superar el máximo). Los ítems forman parte del estado (entran al Memento, así que el undo los repone).
+
+> El **tiempo límite** que figuraba en versiones previas del diseño fue **retirado** de la implementación (ver §5.8); la otra funcionalidad adicional, además de la visión limitada, es ahora el sistema de energía + caja pesada + botella.
 
 ---
 
@@ -138,11 +144,14 @@ Cada regla está numerada para poder referenciarla desde código y tests.
 - **R20**. Si un nivel tiene visión limitada, solo se renderizan las celdas y entidades dentro del radio N (parámetro del nivel) alrededor de la posición actual del jugador. Las celdas fuera del radio se muestran como oscuras/ocultas.
 - **R21**. La visión limitada no afecta la lógica del juego: colisiones, empujes, deslizamientos y victoria se resuelven igual independientemente de si una celda es visible o no.
 
-### Tiempo límite
+### Energía (funcionalidad adicional)
 
-- **R22**. Si un nivel tiene tiempo límite, al iniciar el nivel arranca un contador regresivo con el valor configurado en el nivel (en segundos).
-- **R23**. Si el contador llega a cero antes de que el jugador complete el nivel, el nivel se reinicia automáticamente (aplica R19). El contador se reinicia junto con el resto del estado.
-- **R24**. El tiempo restante se muestra en el HUD durante toda la partida del nivel.
+- **R22**. Cada acción consume energía del jugador: **moverse a una celda libre cuesta 1**; **empujar una caja cuesta lo que defina la caja** (normal 1, pesada 3).
+- **R23**. Si el jugador no tiene energía suficiente para empujar una caja, el empuje no se realiza (pero puede seguir moviéndose si le alcanza para moverse).
+- **R24**. Si el jugador no tiene energía ni para moverse (energía 0), el nivel **se reinicia automáticamente** (aplica R19).
+- **R25**. La **botella de agua**, al ser recogida (el jugador entra a su celda), repone energía (+12) sin superar el máximo; luego desaparece del tablero. El jugador arranca cada nivel con su energía máxima (20).
+
+> **Nota:** el **tiempo límite** (R22–R24 en versiones previas del diseño) fue retirado. La numeración R22–R25 corresponde ahora al sistema de energía.
 
 ---
 
@@ -181,11 +190,11 @@ Para cada entidad: **qué información maneja** y **qué decisiones toma**. Esto
 - Sabe si está abierto o cerrado (a través de su `EstadoMuro`). Su estado lo cambia el cerrojo vinculado. Cuando está abierto se comporta como celda vacía; cuando está cerrado, como pared.
 
 ### Jugador
-- **Sabe**: su posición.
-- **Decide**: si puede moverse en una dirección dada (consultando al tablero). Cuando se mueve, comunica al tablero el cambio de posición.
+- **Sabe**: su posición y su **energía** (actual y máxima).
+- **Decide**: si puede moverse en una dirección dada (consultando al tablero); si tiene energía para una acción; consume/repone energía. Cuando se mueve, comunica al tablero el cambio de posición.
 
 ### Caja (concepto general)
-- **Sabe**: su posición.
+- **Sabe**: su posición y su **costo de empuje** (delegado en una `EstrategiaEmpuje`).
 - **Decide**: si puede ser empujada en una dirección dada (consultando al tablero); cómo reacciona al empuje (cada subtipo lo resuelve a su manera).
 
 ### Caja normal
@@ -198,18 +207,20 @@ Para cada entidad: **qué información maneja** y **qué decisiones toma**. Esto
 ### Caja llave
 - **Sabe** además: a qué cerrojo específico "responde" (identificador de cerrojo). La correspondencia es **uno a uno**: cada caja llave activa únicamente su cerrojo asignado (ver §5.2).
 
+### Caja pesada
+- No agrega información propia; solo trae una `EstrategiaEmpuje` de mayor costo (3). Su reacción al empuje es la de una caja normal.
+
+### Ítem / Botella de agua
+- **Sabe**: su posición.
+- **Decide**: qué efecto aplica al jugador que la recoge (la botella repone energía). Cada ítem resuelve su efecto a su manera (polimorfismo), sin que nadie pregunte su tipo.
+
 ### Estado del juego
-- **Sabe**: contadores actuales (movimientos, empujes, undos usados, undos disponibles), historial de estados; si el nivel activo tiene temporizador, mantiene referencia al Temporizador.
-- **Decide**: cuándo permitir undo, cómo registrar un nuevo movimiento, cómo ejecutar el reinicio (delega al Nivel la reconstrucción del tablero y resetea sus propios contadores e historial); reacciona a la notificación de tiempo agotado disparando el reinicio (R23).
+- **Sabe**: contadores actuales (movimientos, empujes, undos usados, undos disponibles), historial de estados (snapshots/Memento).
+- **Decide**: cuándo permitir undo, cómo registrar un nuevo movimiento, y cómo ejecutar el reinicio (restaura el snapshot inicial y resetea contadores e historial).
 
 ### Nivel
-- **Sabe**: la disposición inicial completa del tablero; si tiene visión limitada y su radio; si tiene tiempo límite y cuántos segundos.
-- **Decide**: cómo construir un tablero a partir de su disposición (delega la construcción a un cargador).
-
-### Temporizador
-- **Sabe**: el tiempo límite configurado, el tiempo restante actual.
-- **Decide**: cuándo notificar al Estado del juego que el tiempo se agotó.
-- **No decide**: qué hacer cuando el tiempo expira (eso lo decide el Estado del juego).
+- **Sabe**: la disposición inicial completa del tablero; si tiene visión limitada y su radio.
+- **Decide**: cómo construir un tablero a partir de su disposición (delega la construcción a las factories).
 
 ---
 
@@ -220,7 +231,9 @@ Para cada entidad: **qué información maneja** y **qué decisiones toma**. Esto
 - Un **tablero** está compuesto por muchas **celdas** (una por posición) y contiene muchas **entidades** (un jugador y cero o más cajas).
 - Una **celda** tiene una **posición** fija; una **entidad** tiene una **posición** que cambia con el tiempo.
 - El **jugador** es una **entidad**.
-- Una **caja** es una **entidad**. **Caja normal**, **caja frágil** y **caja llave** son tipos especializados de **caja**.
+- Una **caja** es una **entidad**. **Caja normal**, **caja frágil**, **caja llave** y **caja pesada** son tipos especializados de **caja**. Cada caja tiene una **estrategia de empuje** que define su costo de energía.
+- El **tablero** contiene además **ítems** (cero o más), por ejemplo botellas de agua, que el jugador recoge al pisarlos.
+- El **jugador** tiene **energía**, que las acciones consumen y los ítems reponen.
 - Una **celda cerrojo** está asociada a un **muro abierto/cerrado** (correspondencia uno a uno; ver §5.2).
 - El **estado del juego** registra cada movimiento del jugador en el **historial**: se lo notifica el resolutor de movimiento durante la resolución (no observa al tablero — ver §8 de `03`).
 - Un **nivel** es la "receta" para crear un **tablero** en su configuración inicial.
@@ -276,6 +289,17 @@ score = max(0, 1000 − 3·movimientos − 5·empujes − 100·undos)
 ### 5.7 ¿El jugador puede pisar una celda destino o cerrojo vacíos?
 **Decisión:** ✅ el jugador puede pisar celdas destino y cerrojo vacías sin efecto (solo las cajas activan esos efectos sobre ellas: destino cuenta para victoria, cerrojo activa el muro). **No** puede atravesar muros cerrados; sí puede pisar muros abiertos (cuando la caja llave asociada está sobre el cerrojo).
 
+### 5.8 Energía, caja pesada y botella (funcionalidad adicional) — y baja del tiempo límite
+**Decisión:** ✅ se reemplaza el **tiempo límite** por un sistema de **energía**:
+
+- El jugador tiene energía (máximo 20, arranca llena). Moverse cuesta 1; empujar cuesta el costo de la caja (normal 1, **pesada 3**), modelado con un **Strategy** (`EstrategiaEmpuje`).
+- Si no alcanza para empujar una caja, el empuje no se hace (puede seguir caminando). Si no alcanza ni para moverse (energía 0), el nivel **se reinicia solo** (R24).
+- La **botella de agua** (`Item`) repone +12 al recogerla.
+
+**Cómo se decide el reinicio por falta de energía (sin condicionales):** el resolutor devuelve un `EventoJuego` y cada valor del enum sabe **su consecuencia** (`aplicarConsecuencia`): `SIN_ENERGIA` reinicia el nivel. El controlador no usa un `if` sobre el evento.
+
+**Razón de bajar el tiempo límite:** mantenerlo junto con la energía daba dos modalidades de "presión temporal" redundantes; la energía + caja pesada + botella es una funcionalidad adicional más rica y mejor integrada al dominio (sin hilos de UI). La **visión limitada** se mantiene como la otra funcionalidad adicional.
+
 ---
 
 ## 6. Lo que **no** modela este documento (queda fuera de alcance del modelo del dominio)
@@ -296,7 +320,7 @@ Estas cosas existen en el proyecto pero pertenecen a otras capas o a fases poste
 Antes de pasar al UML, confirmar:
 
 - [x] El glosario cubre todos los términos del enunciado del TI.
-- [x] Las reglas R1–R24 cubren todos los requisitos funcionales del PDF y las funcionalidades adicionales.
+- [x] Las reglas R1–R25 cubren todos los requisitos funcionales del PDF y las funcionalidades adicionales (visión limitada y energía/caja pesada/botella; el tiempo límite fue retirado).
 - [x] Las decisiones de §5 están aprobadas o ajustadas.
 - [x] No hay solapamiento de responsabilidades entre entidades.
 - [x] Cada entidad sabe lo mínimo necesario para tomar sus decisiones (Information Expert).

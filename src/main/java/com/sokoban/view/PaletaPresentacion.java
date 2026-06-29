@@ -30,7 +30,9 @@ final class PaletaPresentacion {
             Map.entry("JUGADOR", new Color(72, 116, 201)),
             Map.entry("CAJA_NORMAL", new Color(174, 127, 73)),
             Map.entry("CAJA_FRAGIL", new Color(243, 197, 87)),
-            Map.entry("CAJA_LLAVE", new Color(95, 145, 204))
+            Map.entry("CAJA_LLAVE", new Color(95, 145, 204)),
+            Map.entry("CAJA_PESADA", new Color(90, 74, 58)),
+            Map.entry("BOTELLA_AGUA", new Color(64, 196, 208))
     );
 
     private static final Map<String, Character> LETRAS = Map.ofEntries(
@@ -39,7 +41,9 @@ final class PaletaPresentacion {
             Map.entry("MURO_CERRADO", 'M'),
             Map.entry("JUGADOR", '@'),
             Map.entry("CAJA_NORMAL", '$'),
-            Map.entry("CAJA_LLAVE", 'K')
+            Map.entry("CAJA_LLAVE", 'K'),
+            Map.entry("CAJA_PESADA", 'P'),
+            Map.entry("BOTELLA_AGUA", 'B')
     );
 
     private static final Map<String, Image> IMAGENES = cargarImagenes();

@@ -3,6 +3,7 @@ package com.sokoban.nivel;
 import com.sokoban.dominio.CajaFragil;
 import com.sokoban.dominio.CajaLlave;
 import com.sokoban.dominio.CajaNormal;
+import com.sokoban.dominio.CajaPesada;
 import com.sokoban.dominio.Entidad;
 import com.sokoban.dominio.Jugador;
 import com.sokoban.dominio.Posicion;
@@ -25,6 +26,7 @@ public class EntidadFactory {
         creadores.put('@', Jugador::new);
         creadores.put('$', CajaNormal::new);
         creadores.put('K', CajaLlave::new);
+        creadores.put('P', CajaPesada::new);
         creadores.put('F', posicion -> new CajaFragil(posicion, RESISTENCIA_FRAGIL));
     }
 

@@ -15,11 +15,11 @@ import org.junit.jupiter.api.Test;
 class NivelBuilderTest {
 
     private NivelBuilder builder() {
-        return new NivelBuilder(new CeldaFactory(), new EntidadFactory());
+        return new NivelBuilder(new CeldaFactory(), new EntidadFactory(), new ItemFactory());
     }
 
     @Test
-    void nivelBaseNoTieneModificadores() {
+    void nivelBaseNoTieneVision() {
         NivelBuilder builder = builder();
         builder.dimensiones(1, 1);
         builder.agregarCelda(' ', new Posicion(0, 0));
@@ -27,23 +27,19 @@ class NivelBuilderTest {
         Nivel nivel = builder.build();
 
         assertFalse(nivel.tieneVisionLimitada());
-        assertFalse(nivel.tieneTiempoLimite());
     }
 
     @Test
-    void losDecoradoresSeComponen() {
+    void elDecoradorDeVisionSeAplica() {
         NivelBuilder builder = builder();
         builder.dimensiones(1, 1);
         builder.agregarCelda(' ', new Posicion(0, 0));
         builder.conVisionLimitada(3);
-        builder.conTiempoLimite(60);
 
         Nivel nivel = builder.build();
 
         assertTrue(nivel.tieneVisionLimitada());
         assertEquals(3, nivel.getRadioVision());
-        assertTrue(nivel.tieneTiempoLimite());
-        assertEquals(60, nivel.getSegundosLimite());
     }
 
     @Test

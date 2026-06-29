@@ -21,7 +21,7 @@ public class PanelHud extends JPanel {
     private final JLabel etiquetaMovimientos = new JLabel();
     private final JLabel etiquetaEmpujes = new JLabel();
     private final JLabel etiquetaUndos = new JLabel();
-    private final JLabel etiquetaTiempo = new JLabel();
+    private final JLabel etiquetaEnergia = new JLabel();
     private final JButton botonUndo = new JButton("Deshacer");
 
     public PanelHud(Controlador controlador) {
@@ -30,7 +30,7 @@ public class PanelHud extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         Font fuente = new Font("SansSerif", Font.BOLD, 14);
-        for (JLabel etiqueta : new JLabel[]{etiquetaNivel, etiquetaMovimientos, etiquetaEmpujes, etiquetaUndos, etiquetaTiempo}) {
+        for (JLabel etiqueta : new JLabel[]{etiquetaNivel, etiquetaMovimientos, etiquetaEmpujes, etiquetaUndos, etiquetaEnergia}) {
             etiqueta.setFont(fuente);
             add(etiqueta);
         }
@@ -57,7 +57,7 @@ public class PanelHud extends JPanel {
         // El boton refleja directamente el predicado del modelo (sin condicionales).
         botonUndo.setEnabled(estado.puedeUndo());
 
-        int tiempo = controlador.getTiempoRestante();
-        etiquetaTiempo.setText(tiempo >= 0 ? "Tiempo: " + tiempo + "s" : "");
+        var jugador = controlador.getJuego().getTablero().getJugador();
+        etiquetaEnergia.setText("Energia: " + jugador.getEnergia() + "/" + jugador.getEnergiaMaxima());
     }
 }

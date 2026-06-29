@@ -10,13 +10,25 @@ package com.sokoban.dominio;
  */
 public abstract class Caja extends Entidad {
 
+    private final EstrategiaEmpuje estrategiaEmpuje;
+
     protected Caja(Posicion posicion) {
+        this(posicion, new EmpujeNormal());
+    }
+
+    protected Caja(Posicion posicion, EstrategiaEmpuje estrategiaEmpuje) {
         super(posicion);
+        this.estrategiaEmpuje = estrategiaEmpuje;
     }
 
     /** Si esta caja cuenta para la victoria. La caja llave queda exenta (R17). */
     public boolean cuentaParaVictoria() {
         return true;
+    }
+
+    /** Energia que cuesta empujar esta caja (delegado en su Strategy). */
+    public int getCostoEmpuje() {
+        return estrategiaEmpuje.costo();
     }
 
     /** Mueve la caja una celda si el destino es transitable y esta libre. */

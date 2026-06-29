@@ -4,7 +4,7 @@ import com.sokoban.dominio.Tablero;
 
 /**
  * Receta de un nivel: sabe construir un Tablero nuevo a partir de su layout y
- * expone sus modificadores opcionales (vision limitada, tiempo limite).
+ * expone su modificador opcional de vision limitada.
  * construirTablero() produce un tablero fresco en cada llamada (sirve para reset).
  */
 public interface Nivel {
@@ -14,8 +14,4 @@ public interface Nivel {
     boolean tieneVisionLimitada();
 
     int getRadioVision();
-
-    boolean tieneTiempoLimite();
-
-    int getSegundosLimite();
 }

@@ -1,14 +1,12 @@
 package com.sokoban.partida;
 
 import com.sokoban.dominio.Tablero;
-import com.sokoban.observer.Observer;
 
 /**
  * Estado logico de la partida: contadores, historial y reglas de undo.
- * No conoce la vista. Observa al Temporizador: cuando expira ejecuta la accion
- * de reinicio configurada (R23), sin decidir por su cuenta que hacer.
+ * No conoce la vista ni la presentacion.
  */
-public class EstadoJuego implements Observer {
+public class EstadoJuego {
 
     private static final int SALTO_UNDO = 5;
     private static final int MAX_UNDOS_CONSECUTIVOS = 3;
@@ -22,7 +20,6 @@ public class EstadoJuego implements Observer {
     private int undosTotales;
 
     private EstadoJuegoMemento mementoInicial;
-    private Runnable accionAlExpirar = () -> { };
 
     public EstadoJuego(Tablero tablero) {
         this.tablero = tablero;
@@ -68,15 +65,6 @@ public class EstadoJuego implements Observer {
         undosTotales = 0;
         historial.descartar();
         historial.guardar(mementoInicial);
-    }
-
-    @Override
-    public void actualizar() {
-        accionAlExpirar.run();
-    }
-
-    public void setAccionAlExpirar(Runnable accion) {
-        this.accionAlExpirar = accion;
     }
 
     public int getMovimientos() {

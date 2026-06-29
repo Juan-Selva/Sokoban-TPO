@@ -22,7 +22,7 @@ class NivelesSolucionablesTest {
     private static final Direccion D = Direccion.DERECHA;
 
     private Juego cargar(String ruta) throws IOException {
-        LectorTxt lector = new LectorTxt(new CeldaFactory(), new EntidadFactory());
+        LectorTxt lector = new LectorTxt(new CeldaFactory(), new EntidadFactory(), new ItemFactory());
         Nivel nivel = lector.leer(ruta);
         return new Juego(nivel.construirTablero());
     }
@@ -34,23 +34,71 @@ class NivelesSolucionablesTest {
     }
 
     @Test
-    void nivel3SeCompletaAbriendoElMuroConLaLlave() throws IOException {
-        Juego juego = cargar("levels/nivel3.txt");
+    void nivel1SeCompletaConDosCajas() throws IOException {
+        Juego juego = cargar("levels/nivel1.txt");
         assertFalse(juego.hayVictoria());
 
-        // Empujar la llave al cerrojo (abre el muro), bajar y empujar la caja al destino.
-        jugar(juego, D, D, D, B, B, D, B, I);
+        jugar(juego, A, B, I, A);
 
         assertTrue(juego.hayVictoria());
     }
 
     @Test
-    void nivel4SeCompletaPeseALaVisionReducida() throws IOException {
+    void nivel2SeCompletaConDeslizamiento() throws IOException {
+        Juego juego = cargar("levels/nivel2.txt");
+        assertFalse(juego.hayVictoria());
+
+        jugar(juego, A, D, D, A);
+
+        assertTrue(juego.hayVictoria());
+    }
+
+    @Test
+    void nivel3SeCompletaConCajaNormal() throws IOException {
+        Juego juego = cargar("levels/nivel3.txt");
+        assertFalse(juego.hayVictoria());
+
+        jugar(juego, B, B, D, D);
+
+        assertTrue(juego.hayVictoria());
+    }
+
+    @Test
+    void nivel4SeCompletaConCajaNormalYLlave() throws IOException {
         Juego juego = cargar("levels/nivel4.txt");
         assertFalse(juego.hayVictoria());
 
-        // Empujar la caja a la derecha y luego hacia abajo hasta el destino.
-        jugar(juego, B, B, D, D, D, D, D, A, D, B, B);
+        jugar(juego, B, B, I, B, D, D, D, D, D, D);
+
+        assertTrue(juego.hayVictoria());
+    }
+
+    @Test
+    void nivel5SeCompletaConCajaFragil() throws IOException {
+        Juego juego = cargar("levels/nivel5.txt");
+        assertFalse(juego.hayVictoria());
+
+        jugar(juego, I, A);
+
+        assertTrue(juego.hayVictoria());
+    }
+
+    @Test
+    void nivel6SeCompletaConCajaPesada() throws IOException {
+        Juego juego = cargar("levels/nivel6.txt");
+        assertFalse(juego.hayVictoria());
+
+        jugar(juego, I, A);
+
+        assertTrue(juego.hayVictoria());
+    }
+
+    @Test
+    void nivel7SeCompletaPeseALaVisionReducida() throws IOException {
+        Juego juego = cargar("levels/nivel7.txt");
+        assertFalse(juego.hayVictoria());
+
+        jugar(juego, B, B, B, B, B, B, B, D, D, D, D, D, D, D, D, A, A);
 
         assertTrue(juego.hayVictoria());
     }

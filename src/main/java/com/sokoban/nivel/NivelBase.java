@@ -2,17 +2,19 @@ package com.sokoban.nivel;
 
 import com.sokoban.dominio.Celda;
 import com.sokoban.dominio.Entidad;
+import com.sokoban.dominio.Item;
 import com.sokoban.dominio.Posicion;
 import com.sokoban.dominio.RegistroEnlaces;
 import com.sokoban.dominio.Tablero;
 
 /**
  * Nivel sin modificadores. Guarda el layout crudo (grilla de caracteres) y, en
- * cada construirTablero(), usa las factories para instanciar celdas y entidades.
+ * cada construirTablero(), usa las factories para instanciar celdas, entidades e
+ * items.
  *
- * El armado no usa instanceof: cada entidad se agrega a si misma (agregarseA) y
- * cada celda/entidad se auto-registra para enlaces (registrarEnlaces). El piso
- * bajo una entidad es siempre una celda vacia.
+ * El armado no usa instanceof: el caracter se enruta por registro (conoce) y cada
+ * entidad se agrega a si misma (agregarseA) y se auto-registra para enlaces. El
+ * piso bajo una entidad o item es siempre una celda vacia.
  */
 public class NivelBase implements Nivel {
 
@@ -21,14 +23,16 @@ public class NivelBase implements Nivel {
     private final char[][] grilla;
     private final CeldaFactory celdaFactory;
     private final EntidadFactory entidadFactory;
+    private final ItemFactory itemFactory;
 
     public NivelBase(int filas, int columnas, char[][] grilla,
-                     CeldaFactory celdaFactory, EntidadFactory entidadFactory) {
+                     CeldaFactory celdaFactory, EntidadFactory entidadFactory, ItemFactory itemFactory) {
         this.filas = filas;
         this.columnas = columnas;
         this.grilla = grilla;
         this.celdaFactory = celdaFactory;
         this.entidadFactory = entidadFactory;
+        this.itemFactory = itemFactory;
     }
 
     @Override
@@ -50,18 +54,25 @@ public class NivelBase implements Nivel {
 
     private void colocar(Tablero tablero, RegistroEnlaces registro, char caracter, Posicion posicion) {
         if (entidadFactory.conoce(caracter)) {
-            Celda piso = celdaFactory.crear(' ', posicion);
-            tablero.setCelda(posicion, piso);
-            piso.registrarEnlaces(registro);
-
+            ponerPiso(tablero, registro, posicion);
             Entidad entidad = entidadFactory.crear(caracter, posicion);
             entidad.agregarseA(tablero);
             entidad.registrarEnlaces(registro);
+        } else if (itemFactory.conoce(caracter)) {
+            ponerPiso(tablero, registro, posicion);
+            Item item = itemFactory.crear(caracter, posicion);
+            tablero.agregarItem(item);
         } else {
             Celda celda = celdaFactory.crear(caracter, posicion);
             tablero.setCelda(posicion, celda);
             celda.registrarEnlaces(registro);
         }
+    }
+
+    private void ponerPiso(Tablero tablero, RegistroEnlaces registro, Posicion posicion) {
+        Celda piso = celdaFactory.crear(' ', posicion);
+        tablero.setCelda(posicion, piso);
+        piso.registrarEnlaces(registro);
     }
 
     @Override
@@ -71,16 +82,6 @@ public class NivelBase implements Nivel {
 
     @Override
     public int getRadioVision() {
-        return 0;
-    }
-
-    @Override
-    public boolean tieneTiempoLimite() {
-        return false;
-    }
-
-    @Override
-    public int getSegundosLimite() {
         return 0;
     }
 }

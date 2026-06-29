@@ -34,11 +34,21 @@ class FactoryTest {
         assertTrue(factory.conoce('$'));
         assertTrue(factory.conoce('F'));
         assertTrue(factory.conoce('K'));
+        assertTrue(factory.conoce('P'));
         assertFalse(factory.conoce('#'));
 
         assertEquals("JUGADOR", factory.crear('@', p).clavePresentacion());
         assertEquals("CAJA_NORMAL", factory.crear('$', p).clavePresentacion());
         assertEquals("CAJA_FRAGIL", factory.crear('F', p).clavePresentacion());
         assertEquals("CAJA_LLAVE", factory.crear('K', p).clavePresentacion());
+        assertEquals("CAJA_PESADA", factory.crear('P', p).clavePresentacion());
+    }
+
+    @Test
+    void itemFactoryConoceYMapea() {
+        ItemFactory factory = new ItemFactory();
+        assertTrue(factory.conoce('B'));
+        assertFalse(factory.conoce('@'));
+        assertEquals("BOTELLA_AGUA", factory.crear('B', p).clavePresentacion());
     }
 }

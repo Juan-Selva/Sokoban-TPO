@@ -2,6 +2,7 @@ package com.sokoban.view;
 
 import com.sokoban.controller.Controlador;
 import com.sokoban.dominio.Entidad;
+import com.sokoban.dominio.Item;
 import com.sokoban.dominio.Posicion;
 import com.sokoban.dominio.Tablero;
 import com.sokoban.nivel.Nivel;
@@ -88,6 +89,11 @@ public class PanelTablero extends JPanel {
 
                 dibujarTile(g, tablero.celdaEn(posicion).clavePresentacion(), ix, iy, tileItem);
 
+                Item item = tablero.itemEn(posicion);
+                if (item != null) {
+                    dibujarFicha(g, item.clavePresentacion(), "", ix, iy, tileItem);
+                }
+
                 Entidad entidad = tablero.entidadEn(posicion);
                 if (entidad != null) {
                     dibujarEntidad(g, entidad, ix, iy, tileItem);
@@ -138,11 +144,15 @@ public class PanelTablero extends JPanel {
     }
 
     private void dibujarEntidad(Graphics2D g, Entidad entidad, int x, int y, int tile) {
-        String clave = entidad.clavePresentacion();
+        dibujarFicha(g, entidad.clavePresentacion(), entidad.etiqueta(), x, y, tile);
+    }
+
+    /** Dibuja una "ficha" (entidad o item) con su sprite o, si falta, color + letra. */
+    private void dibujarFicha(Graphics2D g, String clave, String etiqueta, int x, int y, int tile) {
         Image sprite = PaletaPresentacion.imagen(clave);
         if (sprite != null) {
             g.drawImage(sprite, x, y, tile, tile, null);
-            dibujarEtiqueta(g, entidad.etiqueta(), x, y, tile);
+            dibujarEtiqueta(g, etiqueta, x, y, tile);
             return;
         }
 
@@ -153,7 +163,7 @@ public class PanelTablero extends JPanel {
         g.setColor(new Color(0, 0, 0, 120));
         g.drawRoundRect(x + margen, y + margen, tile - 2 * margen, tile - 2 * margen, arco, arco);
 
-        String texto = entidad.etiqueta();
+        String texto = etiqueta;
         if (texto.isEmpty()) {
             texto = String.valueOf(PaletaPresentacion.letra(clave));
         }
