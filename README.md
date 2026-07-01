@@ -46,8 +46,8 @@ src/
 │   │   ├── comandos/     # Command: Mover / Undo / Reiniciar
 │   │   ├── observer/     # Interfaces Observer / Observable
 │   │   ├── controller/   # Controlador (input → Command, avance de niveles)
-│   │   ├── view/         # Swing: VentanaJuego, PanelTablero, PanelHud,
-│   │   │                 #   PaletaPresentacion, ReproductorSonidos
+│   │   ├── view/         # Swing: VentanaJuego, PanelInicio, PanelTablero, PanelHud,
+│   │   │                 #   PaletaPresentacion, ReproductorSonidos, 
 │   │   └── Main.java
 │   └── resources/
 │       ├── levels/       # Niveles en formato .txt (nivel1–nivel5)
