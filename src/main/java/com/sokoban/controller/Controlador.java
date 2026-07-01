@@ -1,5 +1,7 @@
 package com.sokoban.controller;
 
+import java.io.IOException;
+
 import com.sokoban.comandos.Command;
 import com.sokoban.comandos.MoverCommand;
 import com.sokoban.comandos.ReiniciarCommand;
@@ -13,7 +15,6 @@ import com.sokoban.nivel.Nivel;
 import com.sokoban.partida.Juego;
 import com.sokoban.partida.PresentadorPartida;
 import com.sokoban.view.VentanaJuego;
-import java.io.IOException;
 
 /**
  * Coordina input, modelo y vista (MVC). Traduce las acciones del usuario a

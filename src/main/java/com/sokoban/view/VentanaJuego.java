@@ -1,19 +1,21 @@
 package com.sokoban.view;
 
-import com.sokoban.controller.Controlador;
-import com.sokoban.dominio.Direccion;
-import com.sokoban.observer.Observer;
-import com.sokoban.partida.ResultadoNivel;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+
+import com.sokoban.controller.Controlador;
+import com.sokoban.dominio.Direccion;
+import com.sokoban.observer.Observer;
+import com.sokoban.partida.ResultadoNivel;
 
 /**
  * Ventana principal. Es Observer del Juego: cuando el modelo cambia, repinta.
