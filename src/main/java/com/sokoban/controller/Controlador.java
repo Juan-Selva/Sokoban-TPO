@@ -53,6 +53,9 @@ public class Controlador implements PresentadorPartida {
     }
 
     public void mover(Direccion direccion) {
+        if (juego == null) {
+            return; // todavia en el menu de inicio: no hay partida cargada.
+        }
         ejecutar(new MoverCommand(direccion));
         sonarUltimoEvento();
         // La consecuencia de una derrota (reinicio) la resuelve el propio evento
@@ -76,11 +79,17 @@ public class Controlador implements PresentadorPartida {
     }
 
     public void deshacer() {
+        if (juego == null) {
+            return;
+        }
         ejecutar(new UndoCommand());
         sonarUltimoEvento();
     }
 
     public void reiniciar() {
+        if (juego == null) {
+            return;
+        }
         ejecutar(new ReiniciarCommand());
         sonarUltimoEvento();
     }

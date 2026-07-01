@@ -5,12 +5,14 @@ import com.sokoban.dominio.Direccion;
 import com.sokoban.observer.Observer;
 import com.sokoban.partida.ResultadoNivel;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 /**
@@ -24,6 +26,8 @@ public class VentanaJuego extends JFrame implements Observer {
     private final PanelTablero panelTablero;
     private final PanelHud panelHud;
     private final transient ReproductorSonidos sonidos = new ReproductorSonidos();
+    private final CardLayout cartas = new CardLayout();
+    private final JPanel raiz = new JPanel(cartas);
 
     public VentanaJuego(Controlador controlador) {
         this.controlador = controlador;
@@ -31,15 +35,32 @@ public class VentanaJuego extends JFrame implements Observer {
 
         setTitle("Sokoban");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
         setMinimumSize(new Dimension(480, 360));
+        setSize(1000, 700);                        // tamano al restaurar desde maximizado
+        setExtendedState(JFrame.MAXIMIZED_BOTH);   // abrir en pantalla completa (maximizada)
 
         this.panelHud = new PanelHud(controlador);
         this.panelTablero = new PanelTablero(controlador);
-        add(panelHud, BorderLayout.NORTH);
-        add(panelTablero, BorderLayout.CENTER);
+
+        // El juego (HUD + tablero) vive en una carta; el menu de inicio en otra.
+        JPanel panelJuego = new JPanel(new BorderLayout());
+        panelJuego.add(panelHud, BorderLayout.NORTH);
+        panelJuego.add(panelTablero, BorderLayout.CENTER);
+
+        PanelInicio panelInicio = new PanelInicio(this::jugar, () -> System.exit(0));
+        raiz.add(panelInicio, "menu");
+        raiz.add(panelJuego, "juego");
+        setContentPane(raiz);
+        cartas.show(raiz, "menu");
 
         registrarTeclas();
+    }
+
+    /** Arranca la partida desde el nivel 1 y muestra el tablero (boton Jugar). */
+    private void jugar() {
+        controlador.iniciar();
+        cartas.show(raiz, "juego");
+        requestFocusInWindow();
     }
 
     /** Notificacion del modelo (Observer): repintar tablero y HUD. */
@@ -51,12 +72,12 @@ public class VentanaJuego extends JFrame implements Observer {
 
     /** Reconstruye el layout cuando cambia el nivel (tamano del tablero). */
     public void refrescarNivel() {
-        // Refrescar el HUD antes de empaquetar: asi pack() dimensiona la ventana
-        // con los textos ya cargados y el HUD no se superpone con el tablero.
+        // La ventana permanece maximizada (pantalla completa) en todos los niveles;
+        // no se hace pack() para no reajustarla al tablero. El tablero se reescala
+        // solo al panel (paintComponent), asi que solo refrescamos HUD y repintamos.
         panelHud.refrescar();
         panelTablero.ajustarTamano();
-        pack();
-        setLocationRelativeTo(null);
+        revalidate();
         panelTablero.repaint();
     }
 
@@ -113,9 +134,9 @@ public class VentanaJuego extends JFrame implements Observer {
 
     private void vincular(String tecla, Runnable accion) {
         String nombre = "accion_" + tecla;
-        JComponent raiz = getRootPane();
-        raiz.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(tecla), nombre);
-        raiz.getActionMap().put(nombre, new AbstractAction() {
+        JComponent rootPane = getRootPane();
+        rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(tecla), nombre);
+        rootPane.getActionMap().put(nombre, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 accion.run();

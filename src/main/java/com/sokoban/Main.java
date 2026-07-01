@@ -11,8 +11,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             Controlador controlador = new Controlador();
             VentanaJuego ventana = new VentanaJuego(controlador);
-            controlador.iniciar();
-            ventana.setVisible(true);
+            ventana.setVisible(true); // muestra el menu de inicio; "Jugar" arranca el nivel 1
         });
     }
 }
