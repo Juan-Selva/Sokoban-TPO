@@ -5,6 +5,7 @@ import com.sokoban.partida.EstadoJuego;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,20 +27,31 @@ public class PanelHud extends JPanel {
 
     public PanelHud(Controlador controlador) {
         this.controlador = controlador;
-        setLayout(new FlowLayout(FlowLayout.LEFT, 14, 10));
+        // Dos filas apiladas (info arriba, botones abajo): asi la altura del HUD
+        // es determinística y no se superpone con el tablero aunque el texto sea largo.
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         Font fuente = new Font("SansSerif", Font.BOLD, 14);
+        JPanel filaInfo = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 2));
+        filaInfo.setOpaque(false);
+        filaInfo.setAlignmentX(LEFT_ALIGNMENT);
         for (JLabel etiqueta : new JLabel[]{etiquetaNivel, etiquetaMovimientos, etiquetaEmpujes, etiquetaUndos, etiquetaEnergia}) {
             etiqueta.setFont(fuente);
-            add(etiqueta);
+            filaInfo.add(etiqueta);
         }
 
         JButton botonReiniciar = new JButton("Reiniciar");
         botonUndo.addActionListener(e -> controlador.deshacer());
         botonReiniciar.addActionListener(e -> controlador.reiniciar());
-        add(botonUndo);
-        add(botonReiniciar);
+        JPanel filaBotones = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+        filaBotones.setOpaque(false);
+        filaBotones.setAlignmentX(LEFT_ALIGNMENT);
+        filaBotones.add(botonUndo);
+        filaBotones.add(botonReiniciar);
+
+        add(filaInfo);
+        add(filaBotones);
 
         refrescar();
     }

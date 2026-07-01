@@ -51,11 +51,13 @@ public class VentanaJuego extends JFrame implements Observer {
 
     /** Reconstruye el layout cuando cambia el nivel (tamano del tablero). */
     public void refrescarNivel() {
+        // Refrescar el HUD antes de empaquetar: asi pack() dimensiona la ventana
+        // con los textos ya cargados y el HUD no se superpone con el tablero.
+        panelHud.refrescar();
         panelTablero.ajustarTamano();
         pack();
         setLocationRelativeTo(null);
         panelTablero.repaint();
-        panelHud.refrescar();
     }
 
     public void mostrarVictoria(ResultadoNivel resultado, boolean hayMasNiveles) {
