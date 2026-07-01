@@ -174,8 +174,13 @@ public class Tablero {
 
     /** Victoria: toda caja que cuenta esta sobre una celda que cuenta (R17). */
     public boolean hayVictoria() {
-        return cajas.stream()
+        var objetivos = cajas.stream()
                 .filter(Caja::cuentaParaVictoria)
+                .toList();
+        if (objetivos.isEmpty()) {
+            return false;
+        }
+        return objetivos.stream()
                 .allMatch(caja -> celdaEn(caja.getPosicion()).cuentaParaVictoria());
     }
 }

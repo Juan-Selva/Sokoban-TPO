@@ -162,6 +162,36 @@ class ResolutorMovimientoTest {
     }
 
     @Test
+    void cajaFragilRotaDisparaReinicioYNoVictoria() {
+        Tablero tablero = filaDePiso(6);
+        tablero.setCelda(new Posicion(0, 2), new Destino(new Posicion(0, 2)));
+        CajaFragil caja = new CajaFragil(new Posicion(0, 1), 1);
+        tablero.agregarCaja(caja);
+        ResolutorMovimiento resolutor = resolutorDe(tablero);
+
+        EventoJuego evento = resolutor.resolver(Direccion.DERECHA);
+
+        assertEquals(EventoJuego.CAJA_FRAGIL_ROTA, evento);
+        assertFalse(resolutor.hayVictoria());
+    }
+
+    @Test
+    void juegoReiniciaAlRomperCajaFragil() {
+        Tablero tablero = filaDePiso(4);
+        CajaFragil caja = new CajaFragil(new Posicion(0, 1), 1);
+        tablero.agregarCaja(caja);
+        Juego juego = new Juego(tablero);
+
+        juego.mover(Direccion.DERECHA);
+
+        assertEquals(EventoJuego.CAJA_FRAGIL_ROTA, juego.getUltimoEvento());
+        assertFalse(juego.hayVictoria());
+        assertEquals(1, tablero.getCajas().size());
+        assertEquals(new Posicion(0, 1), tablero.getCajas().get(0).getPosicion());
+        assertEquals(1, ((CajaFragil) tablero.getCajas().get(0)).getResistencia());
+    }
+
+    @Test
     void victoriaCuandoLaCajaQuedaSobreElDestino() {
         Tablero tablero = new Tablero(1, 3);
         tablero.setCelda(new Posicion(0, 0), new CeldaVacia(new Posicion(0, 0)));

@@ -15,11 +15,28 @@ public enum EventoJuego {
     EMPUJE("empuje"),
     UNDO("undo"),
     REINICIO("reinicio"),
-    SIN_ENERGIA("sin_energia") {
+    SIN_ENERGIA("") {
         @Override
         public void aplicarConsecuencia(Juego juego) {
             // Sin energia para seguir: el nivel se reinicia.
             juego.reiniciar();
+        }
+
+        @Override
+        public void presentar(PresentadorPartida presentador) {
+            presentador.alPerderNivel();
+        }
+    },
+    CAJA_FRAGIL_ROTA("") {
+        @Override
+        public void aplicarConsecuencia(Juego juego) {
+            // Caja fragil agotada (R9): el nivel se reinicia.
+            juego.reiniciar();
+        }
+
+        @Override
+        public void presentar(PresentadorPartida presentador) {
+            presentador.alPerderNivel();
         }
     };
 
@@ -42,5 +59,15 @@ public enum EventoJuego {
      */
     public void aplicarConsecuencia(Juego juego) {
         // Sin consecuencia por defecto.
+    }
+
+    /**
+     * Presenta este evento al jugador por doble despacho. Por defecto no avisa
+     * nada; los eventos de derrota lo redefinen para notificar al presentador.
+     * Asi la vista no necesita condicionales por tipo de evento (el reinicio
+     * manual, por ejemplo, usa el comportamiento por defecto y no avisa).
+     */
+    public void presentar(PresentadorPartida presentador) {
+        // Sin aviso por defecto.
     }
 }

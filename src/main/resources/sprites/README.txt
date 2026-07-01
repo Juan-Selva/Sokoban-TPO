@@ -21,8 +21,14 @@ Entidades (se dibujan encima de la celda):
   CAJA_NORMAL.png
   CAJA_FRAGIL.png
   CAJA_LLAVE.png
+  CAJA_PESADA.png
+
+Items (se dibujan encima de la celda):
+  BOTELLA_AGUA.png
+
+Total: 13 imagenes.
 
 Notas:
 - Los nombres son la "clave de presentacion" del dominio; no los cambies.
 - Sobre CAJA_FRAGIL se sigue dibujando el numero de resistencia restante.
-- Usar imagenes de dominio publico / libres y registrar su origen y licencia.
+- Licencias: ver ../ASSETS-LICENCIAS.txt

@@ -11,6 +11,7 @@ import com.sokoban.nivel.ItemFactory;
 import com.sokoban.nivel.LectorTxt;
 import com.sokoban.nivel.Nivel;
 import com.sokoban.partida.Juego;
+import com.sokoban.partida.PresentadorPartida;
 import com.sokoban.view.VentanaJuego;
 import java.io.IOException;
 
@@ -21,16 +22,14 @@ import java.io.IOException;
  *
  * La vista es opcional (puede ser null en tests headless).
  */
-public class Controlador {
+public class Controlador implements PresentadorPartida {
 
     private static final String[] RUTAS_NIVELES = {
             "levels/nivel1.txt",
             "levels/nivel2.txt",
             "levels/nivel3.txt",
             "levels/nivel4.txt",
-            "levels/nivel5.txt",
-            "levels/nivel6.txt",
-            "levels/nivel7.txt"
+            "levels/nivel5.txt"
     };
 
     private final LectorTxt lector;
@@ -56,12 +55,23 @@ public class Controlador {
     public void mover(Direccion direccion) {
         ejecutar(new MoverCommand(direccion));
         sonarUltimoEvento();
-        // La consecuencia de quedarse sin energia (reinicio) la resuelve el propio
-        // evento dentro del modelo (EventoJuego.aplicarConsecuencia); aqui solo
-        // queda la coordinacion de avance de nivel ante la victoria.
+        // La consecuencia de una derrota (reinicio) la resuelve el propio evento
+        // dentro del modelo (EventoJuego.aplicarConsecuencia). El aviso al jugador
+        // tambien lo decide el evento por doble despacho: solo las derrotas avisan;
+        // el reinicio manual no muestra nada.
+        juego.getUltimoEvento().presentar(this);
         if (juego.hayVictoria()) {
             reproducirSonido("victoria");
             manejarVictoria();
+        }
+    }
+
+    /** El jugador perdio el nivel: se avisa igual que la victoria (best-effort). */
+    @Override
+    public void alPerderNivel() {
+        reproducirSonido("derrota");
+        if (vista != null) {
+            vista.mostrarDerrota();
         }
     }
 

@@ -73,6 +73,18 @@ public class VentanaJuego extends JFrame implements Observer {
         JOptionPane.showMessageDialog(this, mensaje, "Victoria", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    public void mostrarDerrota() {
+        JOptionPane.showOptionDialog(
+                this,
+                "Perdiste el nivel.",
+                "Perdiste",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.WARNING_MESSAGE,
+                null,
+                new Object[] { "Reiniciar" },
+                "Reiniciar");
+    }
+
     public void mostrarError(String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
     }

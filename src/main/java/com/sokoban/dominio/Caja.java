@@ -59,6 +59,11 @@ public abstract class Caja extends Entidad {
         return false;
     }
 
+    /** Si al eliminarse del tablero el nivel debe reiniciarse (caja fragil rota, R9). */
+    public boolean reiniciaNivelAlEliminarse() {
+        return false;
+    }
+
     @Override
     public void notificarEntrada(Celda celda) {
         celda.efectoEntrada(this);

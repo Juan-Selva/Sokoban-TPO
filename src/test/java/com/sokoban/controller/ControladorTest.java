@@ -19,11 +19,14 @@ class ControladorTest {
 
         assertEquals(1, controlador.getNumeroNivel());
 
-        // nivel1: dos cajas sobre dos destinos.
-        controlador.mover(Direccion.ARRIBA);
+        // nivel1: dos cajas sobre dos destinos (solucion en 7 movimientos).
         controlador.mover(Direccion.ABAJO);
-        controlador.mover(Direccion.IZQUIERDA);
+        controlador.mover(Direccion.DERECHA);
+        controlador.mover(Direccion.DERECHA);
+        controlador.mover(Direccion.ABAJO);
         controlador.mover(Direccion.ARRIBA);
+        controlador.mover(Direccion.DERECHA);
+        controlador.mover(Direccion.ABAJO);
 
         assertEquals(2, controlador.getNumeroNivel());
         assertNotNull(controlador.getJuego().getTablero().getJugador());

@@ -64,6 +64,9 @@ public class ResolutorMovimiento {
         }
         jugador.consumir(costo);
         finalizarTurno(jugador, true);
+        if (caja.reiniciaNivelAlEliminarse()) {
+            return EventoJuego.CAJA_FRAGIL_ROTA;
+        }
         return EventoJuego.EMPUJE;
     }
 

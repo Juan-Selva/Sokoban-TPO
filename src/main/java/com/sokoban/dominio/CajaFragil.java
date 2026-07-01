@@ -42,6 +42,11 @@ public class CajaFragil extends Caja {
     }
 
     @Override
+    public boolean reiniciaNivelAlEliminarse() {
+        return estaRota();
+    }
+
+    @Override
     public void capturarEstadoEn(MementoTablero memento) {
         super.capturarEstadoEn(memento);
         memento.guardarResistencia(this, resistencia);

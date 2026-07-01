@@ -10,8 +10,12 @@ ir agregando sonidos de a uno.
   undo.wav         -> se deshace un movimiento (tecla U)
   reinicio.wav     -> se reinicia el nivel (tecla R)
   victoria.wav     -> se completa el nivel
+  derrota.wav      -> cartel de derrota (sin energia o caja fragil rota)
+  sin_energia.wav  -> reservado (las derrotas usan derrota.wav)
+
+Total: 7 sonidos.
 
 Notas:
 - Formato WAV/PCM (no MP3): es lo que soporta javax.sound.sampled del JDK.
 - Sonidos cortos (decimas de segundo) para movimiento/empuje.
-- Usar audio de dominio publico / libre y registrar su origen y licencia.
+- Licencias: ver ../ASSETS-LICENCIAS.txt

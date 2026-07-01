@@ -3,103 +3,60 @@ package com.sokoban.nivel;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.sokoban.comandos.MoverCommand;
 import com.sokoban.dominio.Direccion;
 import com.sokoban.partida.Juego;
 import java.io.IOException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Verifica que los niveles del juego son efectivamente completables, aplicando
- * una secuencia de movimientos conocida y comprobando la victoria. Sirve de red
- * de seguridad ante cambios en el layout de los .txt.
+ * Red de seguridad: verifica que cada nivel del juego tiene solucion sobre el
+ * motor real. Se apoya en {@link BuscadorSolucionNivel} (BFS que contempla
+ * energia, caja fragil, caja pesada, llave/cerrojo/muro y deslizamiento) para
+ * hallar una secuencia de movimientos y comprobar la victoria. No depende de un
+ * layout puntual: si algun nivel deja de ser resoluble, el test falla.
  */
 class NivelesSolucionablesTest {
 
-    private static final Direccion A = Direccion.ARRIBA;
-    private static final Direccion B = Direccion.ABAJO;
-    private static final Direccion I = Direccion.IZQUIERDA;
-    private static final Direccion D = Direccion.DERECHA;
-
     private Juego cargar(String ruta) throws IOException {
         LectorTxt lector = new LectorTxt(new CeldaFactory(), new EntidadFactory(), new ItemFactory());
-        Nivel nivel = lector.leer(ruta);
-        return new Juego(nivel.construirTablero());
+        return new Juego(lector.leer(ruta).construirTablero());
     }
 
-    private void jugar(Juego juego, Direccion... pasos) {
+    private void verificarResoluble(String ruta, int limiteProfundidad) throws IOException {
+        List<Direccion> pasos = BuscadorSolucionNivel.buscar(ruta, limiteProfundidad);
+        assertFalse(pasos.isEmpty(), "No se encontro solucion para " + ruta);
+
+        Juego juego = cargar(ruta);
+        assertFalse(juego.hayVictoria());
         for (Direccion paso : pasos) {
-            juego.ejecutar(new MoverCommand(paso));
+            juego.mover(paso);
         }
+        assertTrue(juego.hayVictoria(), "La secuencia hallada no completa " + ruta);
     }
 
     @Test
-    void nivel1SeCompletaConDosCajas() throws IOException {
-        Juego juego = cargar("levels/nivel1.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, A, B, I, A);
-
-        assertTrue(juego.hayVictoria());
+    void nivel1EsResoluble() throws IOException {
+        verificarResoluble("levels/nivel1.txt", 15);
     }
 
     @Test
-    void nivel2SeCompletaConDeslizamiento() throws IOException {
-        Juego juego = cargar("levels/nivel2.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, A, D, D, A);
-
-        assertTrue(juego.hayVictoria());
+    void nivel2EsResoluble() throws IOException {
+        verificarResoluble("levels/nivel2.txt", 15);
     }
 
     @Test
-    void nivel3SeCompletaConCajaNormal() throws IOException {
-        Juego juego = cargar("levels/nivel3.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, B, B, D, D);
-
-        assertTrue(juego.hayVictoria());
+    void nivel3EsResoluble() throws IOException {
+        verificarResoluble("levels/nivel3.txt", 22);
     }
 
     @Test
-    void nivel4SeCompletaConCajaNormalYLlave() throws IOException {
-        Juego juego = cargar("levels/nivel4.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, B, B, I, B, D, D, D, D, D, D);
-
-        assertTrue(juego.hayVictoria());
+    void nivel4EsResoluble() throws IOException {
+        verificarResoluble("levels/nivel4.txt", 35);
     }
 
     @Test
-    void nivel5SeCompletaConCajaFragil() throws IOException {
-        Juego juego = cargar("levels/nivel5.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, I, A);
-
-        assertTrue(juego.hayVictoria());
-    }
-
-    @Test
-    void nivel6SeCompletaConCajaPesada() throws IOException {
-        Juego juego = cargar("levels/nivel6.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, I, A);
-
-        assertTrue(juego.hayVictoria());
-    }
-
-    @Test
-    void nivel7SeCompletaPeseALaVisionReducida() throws IOException {
-        Juego juego = cargar("levels/nivel7.txt");
-        assertFalse(juego.hayVictoria());
-
-        jugar(juego, B, B, B, B, B, B, B, D, D, D, D, D, D, D, D, A, A);
-
-        assertTrue(juego.hayVictoria());
+    void nivel5EsResoluble() throws IOException {
+        verificarResoluble("levels/nivel5.txt", 40);
     }
 }

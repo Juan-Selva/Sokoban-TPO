@@ -23,14 +23,14 @@ final class PaletaPresentacion {
             Map.entry("CELDA_VACIA", new Color(92, 181, 69)),
             Map.entry("PARED", new Color(148, 41, 38)),
             Map.entry("DESTINO", new Color(233, 196, 70)),
-            Map.entry("TERRENO_RESBALADIZO", new Color(163, 227, 255)),
+            Map.entry("TERRENO_RESBALADIZO", new Color(140, 210, 255)),
             Map.entry("CERROJO", new Color(201, 64, 182)),
             Map.entry("MURO_CERRADO", new Color(45, 45, 45)),
-            Map.entry("MURO_ABIERTO", new Color(150, 150, 150)),
+            Map.entry("MURO_ABIERTO", new Color(130, 130, 130)),
             Map.entry("JUGADOR", new Color(72, 116, 201)),
             Map.entry("CAJA_NORMAL", new Color(174, 127, 73)),
             Map.entry("CAJA_FRAGIL", new Color(243, 197, 87)),
-            Map.entry("CAJA_LLAVE", new Color(95, 145, 204)),
+            Map.entry("CAJA_LLAVE", new Color(201, 64, 182)),
             Map.entry("CAJA_PESADA", new Color(90, 74, 58)),
             Map.entry("BOTELLA_AGUA", new Color(64, 196, 208))
     );

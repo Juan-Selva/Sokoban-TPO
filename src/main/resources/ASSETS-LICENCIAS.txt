@@ -1,0 +1,41 @@
+Registro de licencias de assets (dominio publico / CC0)
+=========================================================
+
+Sprites
+-------
+Kenney Sokoban Pack (11 sprites base)
+  Origen: https://kenney.nl/assets/sokoban
+  Mirror: https://opengameart.org/content/sokoban-100-tiles
+  Licencia: CC0 1.0 Universal
+  Archivos: CELDA_VACIA, PARED, DESTINO, TERRENO_RESBALADIZO, JUGADOR,
+            CAJA_NORMAL, CAJA_FRAGIL, CAJA_LLAVE, CAJA_PESADA,
+            MURO_CERRADO, MURO_ABIERTO
+
+Kenney Game Icons (1 sprite compuesto)
+  Origen: https://kenney.nl/assets/game-icons
+  Mirror: https://opengameart.org/content/game-icons
+  Licencia: CC0 1.0 Universal
+  Archivo: CERROJO (locked.png sobre piso; recoloreado)
+
+Botella de energia (sprite original)
+  Origen: arte generado para el proyecto (botella cyan + rayo)
+  Licencia: uso del equipo / mismo proyecto
+  Archivo: BOTELLA_AGUA
+
+Sonidos
+-------
+Kenney Interface Sounds (6 efectos)
+  Origen: https://kenney.nl/assets/interface-sounds
+  Mirror: https://opengameart.org/content/interface-sounds
+  Conversion WAV: https://github.com/Calinou/kenney-interface-sounds (CC0)
+  Licencia: CC0 1.0 Universal
+  Archivos: movimiento (tick_001), empuje (drop_003), undo (back_001),
+            reinicio (open_001), sin_energia (glitch_001), victoria (confirmation_004)
+
+Kenney Music Jingles (1 efecto)
+  Origen: https://kenney.nl/assets/music-jingles
+  Mirror: https://opengameart.org/content/85-short-music-jingles
+  Licencia: CC0 1.0 Universal
+  Archivo: derrota (jingles_PIZZA03, Kenney Music Jingles)
+
+Nota: Kenney solicita credito opcional ("Kenney.nl"); no es obligatorio bajo CC0.

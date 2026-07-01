@@ -64,4 +64,12 @@ class TableroTest {
 
         assertFalse(tablero.hayVictoria());
     }
+
+    @Test
+    void noHayVictoriaSiNoQuedanCajasObjetivo() {
+        Tablero tablero = new Tablero(1, 1);
+        tablero.setCelda(new Posicion(0, 0), new Destino(new Posicion(0, 0)));
+
+        assertFalse(tablero.hayVictoria());
+    }
 }
