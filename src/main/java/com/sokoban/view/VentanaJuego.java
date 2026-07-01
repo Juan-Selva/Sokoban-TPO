@@ -47,7 +47,11 @@ public class VentanaJuego extends JFrame implements Observer {
         panelJuego.add(panelHud, BorderLayout.NORTH);
         panelJuego.add(panelTablero, BorderLayout.CENTER);
 
-        PanelInicio panelInicio = new PanelInicio(this::jugar, () -> System.exit(0));
+        PanelInicio panelInicio = new PanelInicio(
+                this::jugar,
+                this::seleccionarNivel,
+                this::mostrarInstrucciones,
+                () -> System.exit(0));
         raiz.add(panelInicio, "menu");
         raiz.add(panelJuego, "juego");
         setContentPane(raiz);
@@ -61,6 +65,43 @@ public class VentanaJuego extends JFrame implements Observer {
         controlador.iniciar();
         cartas.show(raiz, "juego");
         requestFocusInWindow();
+    }
+
+    private void seleccionarNivel() {
+        int totalNiveles = controlador.getTotalNiveles();
+        String[] opciones = new String[totalNiveles];
+        for (int i = 0; i < totalNiveles; i++) {
+            opciones[i] = "Nivel " + (i + 1);
+        }
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Selecciona un nivel para jugar:",
+                "Niveles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+        if (seleccionado != null) {
+            int indice = Integer.parseInt(seleccionado.replaceAll("\\D+", "")) - 1;
+            controlador.iniciar(indice);
+            cartas.show(raiz, "juego");
+            requestFocusInWindow();
+        }
+    }
+
+    private void mostrarInstrucciones() {
+        String mensaje = "Objetivo:\n"
+                + "Empuja cada caja hasta su destino.\n\n"
+                + "Controles:\n"
+                + "Flechas o WASD = mover\n"
+                + "U = deshacer\n"
+                + "R = reiniciar nivel\n\n"
+                + "Mecánicas especiales:\n"
+                + "- Botella de poder: recoge botellas para recuperar energía extra.\n"
+                + "- Cajas pesadas: empujarlas consume más energía, así que planea bien tus movimientos.\n\n"
+                + "Usa 'Niveles' para elegir directamente un nivel.\n"
+                + "Presiona 'Salir' para cerrar el juego.";
+        JOptionPane.showMessageDialog(this, mensaje, "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /** Notificacion del modelo (Observer): repintar tablero y HUD. */

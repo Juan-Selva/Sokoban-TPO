@@ -52,6 +52,10 @@ public class Controlador implements PresentadorPartida {
         cargarNivel(0);
     }
 
+    public void iniciar(int indiceNivel) {
+        cargarNivel(indiceNivel);
+    }
+
     public void mover(Direccion direccion) {
         if (juego == null) {
             return; // todavia en el menu de inicio: no hay partida cargada.
@@ -104,6 +108,10 @@ public class Controlador implements PresentadorPartida {
 
     public int getNumeroNivel() {
         return indiceNivel + 1;
+    }
+
+    public int getTotalNiveles() {
+        return RUTAS_NIVELES.length;
     }
 
     private void ejecutar(Command command) {

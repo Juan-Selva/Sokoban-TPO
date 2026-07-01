@@ -35,9 +35,11 @@ public class PanelInicio extends JPanel {
     private static final Color TITULO = new Color(233, 196, 70);
     private static final Color SUBTITULO = new Color(185, 185, 185);
     private static final Color VERDE = new Color(84, 150, 58);
+    private static final Color AZUL = new Color(52, 101, 164);
+    private static final Color GRIS = new Color(95, 95, 95);
     private static final Color ROJO = new Color(150, 52, 48);
 
-    public PanelInicio(Runnable alJugar, Runnable alSalir) {
+    public PanelInicio(Runnable alJugar, Runnable alNiveles, Runnable alInstrucciones, Runnable alSalir) {
         setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
         gc.gridx = 0;
@@ -66,9 +68,19 @@ public class PanelInicio extends JPanel {
         gc.insets = new Insets(8, 0, 8, 0);
         add(jugar, gc);
 
+        JButton niveles = crearBoton("Niveles", AZUL);
+        niveles.addActionListener(e -> alNiveles.run());
+        gc.gridy = 4;
+        add(niveles, gc);
+
+        JButton instrucciones = crearBoton("Instrucciones", GRIS);
+        instrucciones.addActionListener(e -> alInstrucciones.run());
+        gc.gridy = 5;
+        add(instrucciones, gc);
+
         JButton salir = crearBoton("Salir", ROJO);
         salir.addActionListener(e -> alSalir.run());
-        gc.gridy = 4;
+        gc.gridy = 6;
         add(salir, gc);
     }
 
